@@ -1,0 +1,8 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#EFE6D7"/>
+  <rect x="94" y="126" width="1012" height="640" rx="40" fill="#F9F6F0"/>
+  <rect x="164" y="226" width="872" height="260" rx="32" fill="#264438"/>
+  <rect x="164" y="524" width="430" height="152" rx="28" fill="#C6A66B"/>
+  <rect x="634" y="524" width="402" height="152" rx="28" fill="#DBC8AE"/>
+  <text x="164" y="104" fill="#264438" font-family="Arial, sans-serif" font-size="36">Bedroom placeholder</text>
+</svg>

@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Cormorant Garamond', ui-serif, Georgia, serif;
+    --color-brand-cream: #f5efe3;
+    --color-brand-forest: #1f3a32;
+    --color-brand-gold: #c3a46a;
+    --color-brand-stone: #6d675f;
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply bg-[var(--color-brand-cream)] text-slate-900 antialiased;
+    }
+
+    ::selection {
+        background: rgba(195, 164, 106, 0.25);
+    }
+}

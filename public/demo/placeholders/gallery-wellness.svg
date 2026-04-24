@@ -1,0 +1,9 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#162720"/>
+  <rect x="90" y="96" width="1020" height="708" rx="44" fill="#223A30"/>
+  <circle cx="350" cy="430" r="164" fill="#C6A66B"/>
+  <circle cx="350" cy="430" r="120" fill="#E8D8BF"/>
+  <rect x="610" y="238" width="350" height="140" rx="28" fill="#D5C1A3"/>
+  <rect x="610" y="410" width="350" height="222" rx="28" fill="#F2EBDD"/>
+  <text x="132" y="166" fill="#F2EBDD" font-family="Arial, sans-serif" font-size="36">Wellness placeholder</text>
+</svg>

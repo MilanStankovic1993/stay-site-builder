@@ -1,0 +1,9 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#E9DFCF"/>
+  <rect x="94" y="112" width="1012" height="676" rx="40" fill="#F8F3EA"/>
+  <rect x="152" y="178" width="418" height="260" rx="24" fill="#C6A66B"/>
+  <rect x="614" y="178" width="434" height="126" rx="24" fill="#D7C0A0"/>
+  <rect x="614" y="330" width="434" height="108" rx="24" fill="#234136"/>
+  <rect x="152" y="484" width="896" height="224" rx="32" fill="#CFC1AD"/>
+  <text x="152" y="96" fill="#234136" font-family="Arial, sans-serif" font-size="36">Lounge placeholder</text>
+</svg>

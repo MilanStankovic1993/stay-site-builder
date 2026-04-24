@@ -1,0 +1,10 @@
+<svg width="1600" height="1000" viewBox="0 0 1600 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="1000" fill="#10211B"/>
+  <rect y="560" width="1600" height="440" fill="#31483D"/>
+  <path d="M0 604L195 510L340 570L532 418L702 520L924 358L1164 493L1340 418L1600 550V1000H0V604Z" fill="#4D6659"/>
+  <path d="M0 686L190 642L392 712L554 604L730 680L930 570L1160 700L1368 612L1600 704V1000H0V686Z" fill="#6B8575"/>
+  <circle cx="1268" cy="182" r="88" fill="#C6A66B" fill-opacity="0.92"/>
+  <rect x="108" y="180" width="560" height="260" rx="28" fill="#F5EFE3" fill-opacity="0.07" stroke="#C6A66B" stroke-opacity="0.4"/>
+  <text x="156" y="270" fill="#F5EFE3" font-family="Georgia, serif" font-size="72">StaySite Builder</text>
+  <text x="156" y="340" fill="#D8CCBA" font-family="Arial, sans-serif" font-size="30">Premium demo hero placeholder</text>
+</svg>
