@@ -77,7 +77,7 @@ class User extends Authenticatable implements FilamentUser
 
         return match ($panel->getId()) {
             'admin' => $this->isSuperAdmin(),
-            'dashboard' => $this->hasAnyRole(['super_admin', 'owner', 'staff']),
+            'dashboard' => $this->hasAnyRole(['owner', 'staff']),
             default => false,
         };
     }

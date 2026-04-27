@@ -89,4 +89,23 @@ class StorefrontTest extends TestCase
             ->assertSee('Preview rezim')
             ->assertSee('Vikendica Vista');
     }
+
+    public function test_selected_theme_renders_matching_storefront_view(): void
+    {
+        $owner = User::factory()->create();
+
+        $accommodation = Accommodation::query()->create([
+            'user_id' => $owner->id,
+            'title' => 'Villa Aurora',
+            'slug' => 'villa-aurora',
+            'type' => AccommodationType::Villa,
+            'status' => AccommodationStatus::Published,
+            'theme_key' => 'luxury',
+        ]);
+
+        $this->get("/s/{$accommodation->slug}")
+            ->assertOk()
+            ->assertSee('Luxury theme')
+            ->assertSee('Villa Aurora');
+    }
 }

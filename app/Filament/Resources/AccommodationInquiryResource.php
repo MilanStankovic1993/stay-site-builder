@@ -5,7 +5,9 @@ namespace App\Filament\Resources;
 use App\Enums\InquiryStatus;
 use App\Filament\Concerns\InteractsWithPanelContext;
 use App\Filament\Resources\AccommodationInquiryResource\Pages;
+use App\Models\Accommodation;
 use App\Models\AccommodationInquiry;
+use App\Models\User;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -31,33 +33,42 @@ class AccommodationInquiryResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'guest_name';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Komunikacija';
-
-    protected static ?string $modelLabel = 'Upit';
-
-    protected static ?string $pluralModelLabel = 'Upiti';
-
     public static function shouldRegisterNavigation(): bool
     {
         return static::canAccess();
+    }
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('admin.nav.communication');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.inquiries.single');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.inquiries.plural');
     }
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Section::make('Detalji upita')
+                Section::make(__('admin.inquiries.details'))
                     ->schema([
                         Grid::make(2)->schema([
-                            TextInput::make('guest_name')->label('Gost')->disabled(),
-                            TextInput::make('guest_email')->label('Email')->disabled(),
-                            TextInput::make('guest_phone')->label('Telefon')->disabled(),
-                            TextInput::make('guests_count')->label('Broj gostiju')->disabled(),
-                            DatePicker::make('check_in')->label('Dolazak')->disabled(),
-                            DatePicker::make('check_out')->label('Odlazak')->disabled(),
-                            TextInput::make('source')->label('Izvor')->disabled()->columnSpanFull(),
-                            Textarea::make('message')->label('Poruka')->rows(7)->disabled()->columnSpanFull(),
-                            Select::make('status')->label('Status')->options(InquiryStatus::options())->required()->native(false)->columnSpanFull(),
+                            TextInput::make('guest_name')->label(__('admin.inquiries.guest'))->disabled(),
+                            TextInput::make('guest_email')->label(__('admin.inquiries.email'))->disabled(),
+                            TextInput::make('guest_phone')->label(__('admin.inquiries.phone'))->disabled(),
+                            TextInput::make('guests_count')->label(__('admin.inquiries.guests_count'))->disabled(),
+                            DatePicker::make('check_in')->label(__('admin.inquiries.check_in'))->disabled(),
+                            DatePicker::make('check_out')->label(__('admin.inquiries.check_out'))->disabled(),
+                            TextInput::make('source')->label(__('admin.inquiries.source'))->disabled()->columnSpanFull(),
+                            Textarea::make('message')->label(__('admin.inquiries.message'))->rows(7)->disabled()->columnSpanFull(),
+                            Select::make('status')->label(__('admin.inquiries.status'))->options(InquiryStatus::options())->required()->native(false)->columnSpanFull(),
                         ]),
                     ]),
             ]);
@@ -66,20 +77,39 @@ class AccommodationInquiryResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('accommodation'))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['accommodation.user', 'user']))
             ->columns([
-                TextColumn::make('accommodation.title')->label('Smestaj')->searchable(),
-                TextColumn::make('guest_name')->label('Gost')->searchable(),
-                TextColumn::make('guest_phone')->label('Telefon'),
-                TextColumn::make('guest_email')->label('Email')->searchable(),
-                TextColumn::make('status')->label('Status')->formatStateUsing(fn ($state) => $state?->label() ?? $state)->badge(),
-                TextColumn::make('created_at')->label('Poslato')->dateTime('d.m.Y H:i')->sortable(),
+                TextColumn::make('accommodation.title')->label(__('admin.inquiries.accommodation'))->searchable(),
+                TextColumn::make('accommodation.user.name')
+                    ->label(__('admin.inquiries.owner'))
+                    ->searchable()
+                    ->visible(fn (): bool => static::isAdminPanel()),
+                TextColumn::make('guest_name')->label(__('admin.inquiries.guest'))->searchable(),
+                TextColumn::make('guest_phone')->label(__('admin.inquiries.phone')),
+                TextColumn::make('guest_email')->label(__('admin.inquiries.email'))->searchable(),
+                TextColumn::make('status')->label(__('admin.inquiries.status'))->formatStateUsing(fn ($state) => $state?->label() ?? $state)->badge(),
+                TextColumn::make('source')->label(__('admin.inquiries.source'))->badge(),
+                TextColumn::make('created_at')->label(__('admin.inquiries.sent'))->dateTime('d.m.Y H:i')->sortable(),
             ])
             ->filters([
-                SelectFilter::make('status')->label('Status')->options(InquiryStatus::options()),
+                SelectFilter::make('status')->label(__('admin.inquiries.status'))->options(InquiryStatus::options()),
+                SelectFilter::make('user_id')
+                    ->label(__('admin.inquiries.owner'))
+                    ->options(fn (): array => User::query()->role('owner')->orderBy('name')->pluck('name', 'id')->all())
+                    ->visible(fn (): bool => static::isAdminPanel()),
+                SelectFilter::make('accommodation_id')
+                    ->label(__('admin.inquiries.accommodation'))
+                    ->options(fn (): array => Accommodation::query()->orderBy('title')->pluck('title', 'id')->all())
+                    ->searchable()
+                    ->preload(),
+                SelectFilter::make('source')
+                    ->label(__('admin.inquiries.source'))
+                    ->options([
+                        'website' => 'Website',
+                    ]),
             ])
             ->recordActions([
-                EditAction::make()->label('Pregled / status'),
+                EditAction::make()->label(__('admin.inquiries.review_status')),
             ]);
     }
 

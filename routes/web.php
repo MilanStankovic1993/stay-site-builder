@@ -1,7 +1,24 @@
 <?php
 
 use App\Http\Controllers\Storefront\AccommodationController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+Route::get('locale/{locale}', function (Request $request, string $locale) {
+    abort_unless(in_array($locale, config('app.supported_locales', ['sr', 'en']), true), 404);
+
+    session(['locale' => $locale]);
+
+    $redirect = (string) $request->query('redirect', route('home'));
+    $redirectHost = parse_url($redirect, PHP_URL_HOST);
+    $requestHost = $request->getHost();
+
+    if ($redirectHost && $redirectHost !== $requestHost) {
+        $redirect = route('home');
+    }
+
+    return redirect()->to($redirect);
+})->name('locale.switch');
 
 Route::view('/', 'home')->name('home');
 

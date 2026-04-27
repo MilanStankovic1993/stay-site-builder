@@ -53,6 +53,52 @@ npm run build
 php artisan serve
 ```
 
+## Produkcioni deploy checklist
+
+1. Kopiraj `.env.production.example` u `.env` na serveru i popuni:
+- `APP_KEY`
+- `APP_URL`
+- MySQL kredencijale
+- SMTP podatke
+
+2. Na serveru pokreni:
+
+```bash
+composer install --no-dev --optimize-autoloader
+npm install
+npm run build
+php artisan key:generate
+php artisan migrate --force
+php artisan db:seed --force
+php artisan storage:link
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan optimize
+```
+
+3. Obavezno proveri:
+- da li je `public/storage` dostupan
+- da li je `queue` pokrenut ako koristis `QUEUE_CONNECTION=database`
+- da li mail radi
+- da li je HTTPS aktivan
+- da li se `APP_DEBUG=false`
+
+4. Pre live pustanja proveri:
+- owner registraciju
+- aktivaciju korisnika od strane super admina
+- odobravanje objave sajta
+- demo temu i jedan pravi public sajt
+- SR/EN prebacivanje na landing strani, panelima i storefront-u
+
+## Preporuke za produkciju
+
+- koristi poseban MySQL korisnicki nalog za aplikaciju
+- ukljuci redovne backup-e za bazu i `storage/app/public`
+- koristi process manager za queue worker
+- dodaj error monitoring i uptime monitoring
+- ako ocekujes veci broj slika, planiraj prelazak na S3 / R2 storage
+
 ## Glavne rute
 
 - landing: `/`

@@ -12,10 +12,6 @@ class OwnerDashboard extends Dashboard
 {
     use InteractsWithPanelContext;
 
-    protected static ?string $title = 'Moj sajt';
-
-    protected static ?string $navigationLabel = 'Moj sajt';
-
     public static function canAccess(): bool
     {
         return static::isOwnerPanel() && (auth()->user()?->canAccessPanel(filament()->getCurrentPanel()) ?? false);
@@ -23,7 +19,12 @@ class OwnerDashboard extends Dashboard
 
     public function getTitle(): string | Htmlable
     {
-        return 'Izgradi svoj sajt';
+        return __('admin.dashboard.owner_title');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.nav.dashboard_owner');
     }
 
     public function getColumns(): int | array

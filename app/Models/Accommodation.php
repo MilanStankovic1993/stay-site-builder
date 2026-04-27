@@ -21,16 +21,24 @@ class Accommodation extends Model implements HasMedia
     protected $fillable = [
         'user_id',
         'title',
+        'title_en',
         'slug',
         'type',
         'status',
         'short_description',
+        'short_description_en',
         'description',
+        'description_en',
         'location_name',
+        'location_name_en',
         'address',
+        'address_en',
         'city',
+        'city_en',
         'region',
+        'region_en',
         'country',
+        'country_en',
         'latitude',
         'longitude',
         'max_guests',
@@ -55,7 +63,9 @@ class Accommodation extends Model implements HasMedia
         'primary_color',
         'secondary_color',
         'meta_title',
+        'meta_title_en',
         'meta_description',
+        'meta_description_en',
         'published_at',
     ];
 
@@ -123,6 +133,72 @@ class Accommodation extends Model implements HasMedia
     public function getHeroImageUrlAttribute(): ?string
     {
         return $this->getFirstMediaUrl('hero') ?: $this->getFirstMediaUrl('gallery');
+    }
+
+    public function getLogoUrlAttribute(): ?string
+    {
+        return $this->getFirstMediaUrl('logo') ?: null;
+    }
+
+    public function getDisplayTitleAttribute(): string
+    {
+        return (string) $this->localizedValue('title');
+    }
+
+    public function getDisplayShortDescriptionAttribute(): ?string
+    {
+        return $this->localizedValue('short_description');
+    }
+
+    public function getDisplayDescriptionAttribute(): ?string
+    {
+        return $this->localizedValue('description');
+    }
+
+    public function getDisplayLocationNameAttribute(): ?string
+    {
+        return $this->localizedValue('location_name');
+    }
+
+    public function getDisplayAddressAttribute(): ?string
+    {
+        return $this->localizedValue('address');
+    }
+
+    public function getDisplayCityAttribute(): ?string
+    {
+        return $this->localizedValue('city');
+    }
+
+    public function getDisplayRegionAttribute(): ?string
+    {
+        return $this->localizedValue('region');
+    }
+
+    public function getDisplayCountryAttribute(): ?string
+    {
+        return $this->localizedValue('country');
+    }
+
+    public function getDisplayMetaTitleAttribute(): ?string
+    {
+        return $this->localizedValue('meta_title');
+    }
+
+    public function getDisplayMetaDescriptionAttribute(): ?string
+    {
+        return $this->localizedValue('meta_description');
+    }
+
+    public function localizedValue(string $attribute): mixed
+    {
+        $localizedAttribute = $attribute.'_en';
+
+        if (app()->getLocale() === 'en' && filled($this->{$localizedAttribute} ?? null)) {
+            return $this->{$localizedAttribute};
+        }
+
+        return $this->{$attribute};
     }
 
     public function isDemoAccommodation(): bool

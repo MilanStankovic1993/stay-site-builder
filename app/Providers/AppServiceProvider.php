@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Http\Responses\Auth\PanelLoginResponse;
 use App\Models\Accommodation;
 use App\Models\AccommodationInquiry;
 use App\Models\Amenity;
 use App\Models\ThemePreset;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use App\Policies\AccommodationInquiryPolicy;
 use App\Policies\AccommodationPolicy;
 use App\Policies\AmenityPolicy;
@@ -18,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->bind(LoginResponse::class, PanelLoginResponse::class);
     }
 
     public function boot(): void

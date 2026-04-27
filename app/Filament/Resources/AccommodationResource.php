@@ -41,15 +41,24 @@ class AccommodationResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Sajt builder';
-
-    protected static ?string $modelLabel = 'Smestaj';
-
-    protected static ?string $pluralModelLabel = 'Smestaji';
-
     public static function shouldRegisterNavigation(): bool
     {
         return static::canAccess();
+    }
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('admin.nav.site_builder');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return app()->getLocale() === 'en' ? 'Accommodation' : 'Smestaj';
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return app()->getLocale() === 'en' ? 'Accommodations' : 'Smestaji';
     }
 
     public static function form(Schema $schema): Schema
@@ -82,6 +91,10 @@ class AccommodationResource extends Resource
                                     $set('slug', Str::slug($state ?? ''));
                                 })
                                 ->columnSpan(1),
+                            TextInput::make('title_en')
+                                ->label('Naziv na engleskom')
+                                ->maxLength(255)
+                                ->columnSpan(1),
                             TextInput::make('slug')
                                 ->label('Slug')
                                 ->required()
@@ -106,8 +119,14 @@ class AccommodationResource extends Resource
                     ]),
                 Section::make('Opis i kapacitet')
                     ->schema([
-                        Textarea::make('short_description')->label('Kratak opis')->rows(3)->columnSpanFull(),
-                        Textarea::make('description')->label('Opis')->rows(8)->columnSpanFull(),
+                        Grid::make(2)->schema([
+                            Textarea::make('short_description')->label('Kratak opis (SR)')->rows(4),
+                            Textarea::make('short_description_en')->label('Short description (EN)')->rows(4),
+                        ]),
+                        Grid::make(2)->schema([
+                            Textarea::make('description')->label('Opis (SR)')->rows(8),
+                            Textarea::make('description_en')->label('Description (EN)')->rows(8),
+                        ]),
                         Grid::make(5)->schema([
                             TextInput::make('max_guests')->label('Maks. gostiju')->numeric(),
                             TextInput::make('bedrooms')->label('Sobe')->numeric(),
@@ -120,11 +139,16 @@ class AccommodationResource extends Resource
                 Section::make('Lokacija')
                     ->schema([
                         Grid::make(2)->schema([
-                            TextInput::make('location_name')->label('Lokacija'),
-                            TextInput::make('address')->label('Adresa'),
-                            TextInput::make('city')->label('Grad'),
-                            TextInput::make('region')->label('Region'),
-                            TextInput::make('country')->label('Drzava'),
+                            TextInput::make('location_name')->label('Lokacija (SR)'),
+                            TextInput::make('location_name_en')->label('Location name (EN)'),
+                            TextInput::make('address')->label('Adresa (SR)'),
+                            TextInput::make('address_en')->label('Address (EN)'),
+                            TextInput::make('city')->label('Grad (SR)'),
+                            TextInput::make('city_en')->label('City (EN)'),
+                            TextInput::make('region')->label('Region (SR)'),
+                            TextInput::make('region_en')->label('Region (EN)'),
+                            TextInput::make('country')->label('Drzava (SR)'),
+                            TextInput::make('country_en')->label('Country (EN)'),
                             TextInput::make('google_maps_url')->label('Google Maps URL')->url(),
                             TextInput::make('latitude')->label('Latitude')->numeric(),
                             TextInput::make('longitude')->label('Longitude')->numeric(),
@@ -175,8 +199,14 @@ class AccommodationResource extends Resource
                     ]),
                 Section::make('SEO')
                     ->schema([
-                        TextInput::make('meta_title')->label('Meta naslov')->maxLength(255),
-                        Textarea::make('meta_description')->label('Meta opis')->rows(4)->columnSpanFull(),
+                        Grid::make(2)->schema([
+                            TextInput::make('meta_title')->label('Meta naslov (SR)')->maxLength(255),
+                            TextInput::make('meta_title_en')->label('Meta title (EN)')->maxLength(255),
+                        ]),
+                        Grid::make(2)->schema([
+                            Textarea::make('meta_description')->label('Meta opis (SR)')->rows(4),
+                            Textarea::make('meta_description_en')->label('Meta description (EN)')->rows(4),
+                        ]),
                     ]),
             ]);
     }
@@ -189,6 +219,7 @@ class AccommodationResource extends Resource
                 TextColumn::make('title')
                     ->label('Naziv')
                     ->searchable()
+                    ->searchable(['title', 'title_en', 'slug'])
                     ->sortable()
                     ->formatStateUsing(fn (string $state, Accommodation $record): string => $record->isDemoAccommodation() ? $state.' [Demo]' : $state),
                 TextColumn::make('type')->label('Tip')->formatStateUsing(fn ($state) => $state?->label() ?? $state)->badge(),

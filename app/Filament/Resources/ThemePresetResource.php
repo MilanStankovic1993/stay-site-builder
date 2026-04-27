@@ -29,12 +29,6 @@ class ThemePresetResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Katalog';
-
-    protected static ?string $modelLabel = 'Tema';
-
-    protected static ?string $pluralModelLabel = 'Teme';
-
     public static function canAccess(): bool
     {
         return static::isAdminPanel() && (auth()->user()?->isSuperAdmin() ?? false);
@@ -45,17 +39,32 @@ class ThemePresetResource extends Resource
         return static::canAccess();
     }
 
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('admin.nav.catalog');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.themes.single');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.themes.plural');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Section::make('Tema')
+                Section::make(__('admin.themes.section'))
                     ->schema([
-                        TextInput::make('key')->label('Key')->required()->unique(ignoreRecord: true),
-                        TextInput::make('name')->label('Naziv')->required(),
-                        Textarea::make('description')->label('Opis')->rows(4)->columnSpanFull(),
-                        TextInput::make('preview_image')->label('Preview image URL')->url(),
-                        Toggle::make('is_active')->label('Aktivna')->default(true),
+                        TextInput::make('key')->label(__('admin.themes.key'))->required()->unique(ignoreRecord: true),
+                        TextInput::make('name')->label(__('admin.themes.name'))->required(),
+                        Textarea::make('description')->label(__('admin.themes.description'))->rows(4)->columnSpanFull(),
+                        TextInput::make('preview_image')->label(__('admin.themes.preview_image'))->url(),
+                        Toggle::make('is_active')->label(__('admin.themes.active'))->default(true),
                     ]),
             ]);
     }
@@ -64,18 +73,18 @@ class ThemePresetResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->label('Naziv')->searchable(),
-                TextColumn::make('key')->label('Key')->badge(),
-                TextColumn::make('description')->label('Opis')->limit(70)->wrap(),
-                IconColumn::make('is_active')->label('Aktivna')->boolean(),
-                TextColumn::make('updated_at')->label('Azurirano')->dateTime('d.m.Y H:i'),
+                TextColumn::make('name')->label(__('admin.themes.name'))->searchable(),
+                TextColumn::make('key')->label(__('admin.themes.key'))->badge(),
+                TextColumn::make('description')->label(__('admin.themes.description'))->limit(70)->wrap(),
+                IconColumn::make('is_active')->label(__('admin.themes.active'))->boolean(),
+                TextColumn::make('updated_at')->label(__('admin.themes.updated_at'))->dateTime('d.m.Y H:i'),
             ])
             ->recordActions([
                 Action::make('preview')
-                    ->label('Preview teme')
+                    ->label(__('admin.themes.preview'))
                     ->url(fn (ThemePreset $record): string => route('storefront.demo-theme', $record->key), shouldOpenInNewTab: true),
-                EditAction::make()->label('Izmeni'),
-                DeleteAction::make()->label('Obrisi'),
+                EditAction::make()->label(__('admin.themes.edit')),
+                DeleteAction::make()->label(__('admin.themes.delete')),
             ]);
     }
 

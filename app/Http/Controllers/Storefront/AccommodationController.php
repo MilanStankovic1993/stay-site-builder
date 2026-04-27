@@ -16,26 +16,50 @@ class AccommodationController extends Controller
 {
     protected const DEMO_THEMES = [
         'default' => [
-            'title' => 'Villa Lavanda Tara',
-            'location_name' => 'Planina Tara',
-            'short_description' => 'Elegantna prezentacija za smestaje koji prodaju atmosferu, fotografije i direktan kontakt.',
-            'description' => 'Default tema je namenjena vlasnicima koji zele cist, premium i profesionalan nastup bez komplikacija. Velika hero fotografija, jasna struktura i direktan upit daju sajtu ozbiljan hotelski utisak, a i dalje ostaje jednostavan za upravljanje.',
+            'sr' => [
+                'title' => 'Villa Lavanda Tara',
+                'location_name' => 'Planina Tara',
+                'short_description' => 'Elegantna prezentacija za smestaje koji prodaju atmosferu, fotografije i direktan kontakt.',
+                'description' => 'Default tema je namenjena vlasnicima koji zele cist, premium i profesionalan nastup bez komplikacija. Velika hero fotografija, jasna struktura i direktan upit daju sajtu ozbiljan hotelski utisak, a i dalje ostaje jednostavan za upravljanje.',
+            ],
+            'en' => [
+                'title' => 'Lavanda Tara Villa',
+                'location_name' => 'Tara Mountain',
+                'short_description' => 'An elegant presentation for stays that sell atmosphere, photography and direct contact.',
+                'description' => 'The Default theme is made for owners who want a clean, premium and professional presence without complexity. A large hero image, clear structure and direct inquiry flow give the website a polished hospitality feel while keeping it easy to manage.',
+            ],
             'primary_color' => '#244338',
             'secondary_color' => '#c7a669',
         ],
         'luxury' => [
-            'title' => 'Villa Aurelia Resort',
-            'location_name' => 'Kosmaj Hills',
-            'short_description' => 'Premium tema za vile, ekskluzivne kuce za odmor i smestaje sa jacim vizuelnim identitetom.',
-            'description' => 'Luxury tema stavlja akcenat na ekskluzivnost, cist ritam sekcija i bogatiji editorial izgled. Idealna je za vlasnike koji zele da njihov smestaj odmah deluje skuplje, elegantnije i vise boutique.',
+            'sr' => [
+                'title' => 'Villa Aurelia Resort',
+                'location_name' => 'Kosmaj Hills',
+                'short_description' => 'Premium tema za vile, ekskluzivne kuce za odmor i smestaje sa jacim vizuelnim identitetom.',
+                'description' => 'Luxury tema stavlja akcenat na ekskluzivnost, cist ritam sekcija i bogatiji editorial izgled. Idealna je za vlasnike koji zele da njihov smestaj odmah deluje skuplje, elegantnije i vise boutique.',
+            ],
+            'en' => [
+                'title' => 'Aurelia Villa Resort',
+                'location_name' => 'Kosmaj Hills',
+                'short_description' => 'A premium theme for villas, exclusive holiday homes and stays that need a stronger visual identity.',
+                'description' => 'The Luxury theme focuses on exclusivity, refined section rhythm and a richer editorial feel. It is ideal for owners who want their accommodation to look more valuable, elegant and boutique from the first second.',
+            ],
             'primary_color' => '#16261f',
             'secondary_color' => '#d8b06a',
         ],
         'nature' => [
-            'title' => 'Brvnara Zelenika',
-            'location_name' => 'Golija Forest Retreat',
-            'short_description' => 'Topla i moderna tema za vikendice, brvnare i objekte u prirodi.',
-            'description' => 'Nature tema kombinije toplu atmosferu, prirodne tonove i opusten raspored sekcija. Napravljena je za vlasnike koji prodaju mir, prirodu, vikend beg i autenticni dozivljaj destinacije.',
+            'sr' => [
+                'title' => 'Brvnara Zelenika',
+                'location_name' => 'Golija Forest Retreat',
+                'short_description' => 'Topla i moderna tema za vikendice, brvnare i objekte u prirodi.',
+                'description' => 'Nature tema kombinije toplu atmosferu, prirodne tonove i opusten raspored sekcija. Napravljena je za vlasnike koji prodaju mir, prirodu, vikend beg i autenticni dozivljaj destinacije.',
+            ],
+            'en' => [
+                'title' => 'Zelenika Cabin',
+                'location_name' => 'Golija Forest Retreat',
+                'short_description' => 'A warm and modern theme for cabins, cottages and properties surrounded by nature.',
+                'description' => 'The Nature theme blends warmth, natural tones and an easy-flowing layout. It is built for owners who sell calm, nature, weekend escape and the authentic feeling of the destination.',
+            ],
             'primary_color' => '#365446',
             'secondary_color' => '#b98b4d',
         ],
@@ -94,7 +118,7 @@ class AccommodationController extends Controller
 
         return redirect()
             ->route('storefront.show', $accommodation->slug)
-            ->with('status', 'Upit je uspesno poslat.');
+            ->with('status', __('site.storefront.inquiry_success'));
     }
 
     protected function renderStorefront(
@@ -108,27 +132,29 @@ class AccommodationController extends Controller
             'accommodation' => $accommodation,
             'settings' => $settings,
             'isPreview' => $isPreview,
-            'metaTitle' => $accommodation->meta_title ?: $settings->default_meta_title,
-            'metaDescription' => $accommodation->meta_description ?: $settings->default_meta_description,
+            'metaTitle' => $accommodation->display_meta_title ?: $settings->default_meta_title,
+            'metaDescription' => $accommodation->display_meta_description ?: $settings->default_meta_description,
             ...$extra,
         ]);
     }
 
     protected function buildDemoAccommodation(Accommodation $accommodation, string $theme): Accommodation
     {
+        $locale = app()->getLocale();
         $themeData = self::DEMO_THEMES[$theme];
+        $localizedThemeData = $themeData[$locale] ?? $themeData['sr'];
 
         $demoAccommodation = $accommodation->replicate();
         $demoAccommodation->slug = $accommodation->slug;
         $demoAccommodation->theme_key = $theme;
-        $demoAccommodation->title = $themeData['title'];
-        $demoAccommodation->location_name = $themeData['location_name'];
-        $demoAccommodation->short_description = $themeData['short_description'];
-        $demoAccommodation->description = $themeData['description'];
+        $demoAccommodation->title = $localizedThemeData['title'];
+        $demoAccommodation->location_name = $localizedThemeData['location_name'];
+        $demoAccommodation->short_description = $localizedThemeData['short_description'];
+        $demoAccommodation->description = $localizedThemeData['description'];
         $demoAccommodation->primary_color = $themeData['primary_color'];
         $demoAccommodation->secondary_color = $themeData['secondary_color'];
-        $demoAccommodation->meta_title = $themeData['title'].' | Demo tema';
-        $demoAccommodation->meta_description = $themeData['short_description'];
+        $demoAccommodation->meta_title = $localizedThemeData['title'].' | '.(__('site.nav.theme_preview'));
+        $demoAccommodation->meta_description = $localizedThemeData['short_description'];
 
         $demoAccommodation->setRelation('amenities', $accommodation->amenities);
         $demoAccommodation->setRelation('media', $accommodation->media);

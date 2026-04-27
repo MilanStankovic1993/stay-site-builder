@@ -37,25 +37,25 @@ class OwnerBuilderStepsWidget extends Widget
             'canPublish' => $canPublish,
             'steps' => [
                 [
-                    'title' => 'Dodajte smestaj',
-                    'description' => 'Unesite osnovne informacije o objektu koji zelite da predstavite.',
+                    'title' => __('admin.builder.step_1_title'),
+                    'description' => __('admin.builder.step_1_text'),
                     'done' => $hasAccommodation,
                 ],
                 [
-                    'title' => 'Popunite sadrzaj i slike',
-                    'description' => 'Opis, galerija, lokacija i sadrzaji cine sajt profesionalnim.',
+                    'title' => __('admin.builder.step_2_title'),
+                    'description' => __('admin.builder.step_2_text'),
                     'done' => $hasContent && $hasImages,
                 ],
                 [
-                    'title' => 'Dodajte kontakt podatke',
-                    'description' => 'Telefon, email i WhatsApp omogucavaju direktne upite.',
+                    'title' => __('admin.builder.step_3_title'),
+                    'description' => __('admin.builder.step_3_text'),
                     'done' => $hasContact,
                 ],
                 [
-                    'title' => 'Preview i objava',
+                    'title' => __('admin.builder.step_4_title'),
                     'description' => $canPublish
-                        ? 'Pregledajte izgled i kliknite Build my site kada ste spremni.'
-                        : 'Mozete pripremiti sajt, ali objava ceka odobrenje super admina nakon uplate.',
+                        ? __('admin.builder.step_4_ready')
+                        : __('admin.builder.step_4_waiting'),
                     'done' => $isPublished,
                 ],
             ],
