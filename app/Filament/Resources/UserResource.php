@@ -147,7 +147,7 @@ class UserResource extends Resource
             ->recordActions([
                 Action::make('toggle_active')
                     ->label(fn (User $record): string => $record->is_active ? __('admin.users.deactivate') : __('admin.users.activate'))
-                    ->icon(fn (User $record): string => $record->is_active ? Heroicon::OutlinedNoSymbol : Heroicon::OutlinedCheckCircle)
+                    ->icon(fn (User $record) => $record->is_active ? Heroicon::OutlinedNoSymbol : Heroicon::OutlinedCheckCircle)
                     ->color(fn (User $record): string => $record->is_active ? 'gray' : 'success')
                     ->requiresConfirmation()
                     ->action(function (User $record): void {
@@ -162,7 +162,7 @@ class UserResource extends Resource
                     }),
                 Action::make('toggle_publish_access')
                     ->label(fn (User $record): string => $record->can_publish_sites ? __('admin.users.revoke_publish') : __('admin.users.approve_publish'))
-                    ->icon(fn (User $record): string => $record->can_publish_sites ? Heroicon::OutlinedLockClosed : Heroicon::OutlinedGlobeAlt)
+                    ->icon(fn (User $record) => $record->can_publish_sites ? Heroicon::OutlinedLockClosed : Heroicon::OutlinedGlobeAlt)
                     ->color(fn (User $record): string => $record->can_publish_sites ? 'gray' : 'success')
                     ->requiresConfirmation()
                     ->action(function (User $record): void {

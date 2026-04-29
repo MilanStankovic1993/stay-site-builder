@@ -53,23 +53,23 @@ class AccommodationResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return app()->getLocale() === 'en' ? 'Accommodation' : 'Smestaj';
+        return __('admin.accommodations.single');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return app()->getLocale() === 'en' ? 'Accommodations' : 'Smestaji';
+        return __('admin.accommodations.plural');
     }
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Section::make('Osnovni podaci')
+                Section::make(__('admin.accommodations.basic_section'))
                     ->schema([
                         Grid::make(2)->schema([
                             Select::make('user_id')
-                                ->label('Vlasnik')
+                                ->label(__('admin.accommodations.owner'))
                                 ->relationship('user', 'name')
                                 ->searchable()
                                 ->preload()
@@ -77,13 +77,13 @@ class AccommodationResource extends Resource
                                 ->required()
                                 ->columnSpan(1),
                             Select::make('type')
-                                ->label('Tip smestaja')
+                                ->label(__('admin.accommodations.type'))
                                 ->options(AccommodationType::options())
                                 ->required()
                                 ->native(false)
                                 ->columnSpan(1),
                             TextInput::make('title')
-                                ->label('Naziv')
+                                ->label(__('admin.accommodations.title'))
                                 ->required()
                                 ->maxLength(255)
                                 ->live(onBlur: true)
@@ -92,17 +92,17 @@ class AccommodationResource extends Resource
                                 })
                                 ->columnSpan(1),
                             TextInput::make('title_en')
-                                ->label('Naziv na engleskom')
+                                ->label(__('admin.accommodations.title_en'))
                                 ->maxLength(255)
                                 ->columnSpan(1),
                             TextInput::make('slug')
-                                ->label('Slug')
+                                ->label(__('admin.accommodations.slug'))
                                 ->required()
                                 ->maxLength(255)
                                 ->unique(ignoreRecord: true)
                                 ->columnSpan(1),
                             Select::make('status')
-                                ->label('Status')
+                                ->label(__('admin.accommodations.status'))
                                 ->options(AccommodationStatus::options())
                                 ->default(AccommodationStatus::Draft->value)
                                 ->required()
@@ -110,102 +110,102 @@ class AccommodationResource extends Resource
                                 ->visible(fn (): bool => static::isAdminPanel())
                                 ->columnSpan(1),
                             TextInput::make('currency')
-                                ->label('Valuta')
+                                ->label(__('admin.accommodations.currency'))
                                 ->default('EUR')
                                 ->maxLength(3)
                                 ->required()
                                 ->columnSpan(1),
                         ]),
                     ]),
-                Section::make('Opis i kapacitet')
+                Section::make(__('admin.accommodations.content_section'))
                     ->schema([
                         Grid::make(2)->schema([
-                            Textarea::make('short_description')->label('Kratak opis (SR)')->rows(4),
-                            Textarea::make('short_description_en')->label('Short description (EN)')->rows(4),
+                            Textarea::make('short_description')->label(__('admin.accommodations.short_description'))->rows(4),
+                            Textarea::make('short_description_en')->label(__('admin.accommodations.short_description_en'))->rows(4),
                         ]),
                         Grid::make(2)->schema([
-                            Textarea::make('description')->label('Opis (SR)')->rows(8),
-                            Textarea::make('description_en')->label('Description (EN)')->rows(8),
+                            Textarea::make('description')->label(__('admin.accommodations.description'))->rows(8),
+                            Textarea::make('description_en')->label(__('admin.accommodations.description_en'))->rows(8),
                         ]),
                         Grid::make(5)->schema([
-                            TextInput::make('max_guests')->label('Maks. gostiju')->numeric(),
-                            TextInput::make('bedrooms')->label('Sobe')->numeric(),
-                            TextInput::make('bathrooms')->label('Kupatila')->numeric(),
-                            TextInput::make('beds')->label('Kreveti')->numeric(),
-                            TextInput::make('size_m2')->label('Kvadratura m2')->numeric(),
+                            TextInput::make('max_guests')->label(__('admin.accommodations.max_guests'))->numeric(),
+                            TextInput::make('bedrooms')->label(__('admin.accommodations.bedrooms'))->numeric(),
+                            TextInput::make('bathrooms')->label(__('admin.accommodations.bathrooms'))->numeric(),
+                            TextInput::make('beds')->label(__('admin.accommodations.beds'))->numeric(),
+                            TextInput::make('size_m2')->label(__('admin.accommodations.size_m2'))->numeric(),
                         ]),
-                        TextInput::make('price_from')->label('Cena od')->numeric()->prefix('EUR'),
+                        TextInput::make('price_from')->label(__('admin.accommodations.price_from'))->numeric()->prefix('EUR'),
                     ]),
-                Section::make('Lokacija')
+                Section::make(__('admin.accommodations.location_section'))
                     ->schema([
                         Grid::make(2)->schema([
-                            TextInput::make('location_name')->label('Lokacija (SR)'),
-                            TextInput::make('location_name_en')->label('Location name (EN)'),
-                            TextInput::make('address')->label('Adresa (SR)'),
-                            TextInput::make('address_en')->label('Address (EN)'),
-                            TextInput::make('city')->label('Grad (SR)'),
-                            TextInput::make('city_en')->label('City (EN)'),
-                            TextInput::make('region')->label('Region (SR)'),
-                            TextInput::make('region_en')->label('Region (EN)'),
-                            TextInput::make('country')->label('Drzava (SR)'),
-                            TextInput::make('country_en')->label('Country (EN)'),
-                            TextInput::make('google_maps_url')->label('Google Maps URL')->url(),
-                            TextInput::make('latitude')->label('Latitude')->numeric(),
-                            TextInput::make('longitude')->label('Longitude')->numeric(),
+                            TextInput::make('location_name')->label(__('admin.accommodations.location_name')),
+                            TextInput::make('location_name_en')->label(__('admin.accommodations.location_name_en')),
+                            TextInput::make('address')->label(__('admin.accommodations.address')),
+                            TextInput::make('address_en')->label(__('admin.accommodations.address_en')),
+                            TextInput::make('city')->label(__('admin.accommodations.city')),
+                            TextInput::make('city_en')->label(__('admin.accommodations.city_en')),
+                            TextInput::make('region')->label(__('admin.accommodations.region')),
+                            TextInput::make('region_en')->label(__('admin.accommodations.region_en')),
+                            TextInput::make('country')->label(__('admin.accommodations.country')),
+                            TextInput::make('country_en')->label(__('admin.accommodations.country_en')),
+                            TextInput::make('google_maps_url')->label(__('admin.accommodations.google_maps_url'))->url(),
+                            TextInput::make('latitude')->label(__('admin.accommodations.latitude'))->numeric(),
+                            TextInput::make('longitude')->label(__('admin.accommodations.longitude'))->numeric(),
                         ]),
                     ]),
-                Section::make('Sadrzaji')
+                Section::make(__('admin.accommodations.amenities_section'))
                     ->schema([
                         Select::make('amenities')
-                            ->label('Sadrzaji')
+                            ->label(__('admin.accommodations.amenities'))
                             ->relationship('amenities', 'name')
                             ->multiple()
                             ->searchable()
                             ->preload()
                             ->columnSpanFull(),
                     ]),
-                Section::make('Slike')
+                Section::make(__('admin.accommodations.media_section'))
                     ->schema([
-                        SpatieMediaLibraryFileUpload::make('hero_media')->label('Hero slika')->collection('hero')->image()->disk('public')->columnSpanFull(),
-                        SpatieMediaLibraryFileUpload::make('gallery_media')->label('Galerija')->collection('gallery')->multiple()->reorderable()->image()->disk('public')->columnSpanFull(),
-                        SpatieMediaLibraryFileUpload::make('logo_media')->label('Logo')->collection('logo')->image()->disk('public')->columnSpanFull(),
+                        SpatieMediaLibraryFileUpload::make('hero_media')->label(__('admin.accommodations.hero_image'))->collection('hero')->image()->disk('public')->columnSpanFull(),
+                        SpatieMediaLibraryFileUpload::make('gallery_media')->label(__('admin.accommodations.gallery'))->collection('gallery')->multiple()->reorderable()->image()->disk('public')->columnSpanFull(),
+                        SpatieMediaLibraryFileUpload::make('logo_media')->label(__('admin.accommodations.logo'))->collection('logo')->image()->disk('public')->columnSpanFull(),
                     ]),
-                Section::make('Kontakt i linkovi')
+                Section::make(__('admin.accommodations.contact_section'))
                     ->schema([
                         Grid::make(2)->schema([
-                            TextInput::make('contact_name')->label('Kontakt osoba'),
-                            TextInput::make('contact_phone')->label('Telefon'),
-                            TextInput::make('contact_email')->label('Email')->email(),
-                            TextInput::make('whatsapp_number')->label('WhatsApp broj'),
-                            TextInput::make('viber_number')->label('Viber broj'),
-                            TextInput::make('instagram_url')->label('Instagram')->url(),
-                            TextInput::make('facebook_url')->label('Facebook')->url(),
-                            TextInput::make('booking_url')->label('Booking URL')->url(),
-                            TextInput::make('airbnb_url')->label('Airbnb URL')->url(),
-                            TextInput::make('website_url')->label('Website URL')->url(),
+                            TextInput::make('contact_name')->label(__('admin.accommodations.contact_name')),
+                            TextInput::make('contact_phone')->label(__('admin.accommodations.contact_phone')),
+                            TextInput::make('contact_email')->label(__('admin.accommodations.contact_email'))->email(),
+                            TextInput::make('whatsapp_number')->label(__('admin.accommodations.whatsapp_number')),
+                            TextInput::make('viber_number')->label(__('admin.accommodations.viber_number')),
+                            TextInput::make('instagram_url')->label(__('admin.accommodations.instagram_url'))->url(),
+                            TextInput::make('facebook_url')->label(__('admin.accommodations.facebook_url'))->url(),
+                            TextInput::make('booking_url')->label(__('admin.accommodations.booking_url'))->url(),
+                            TextInput::make('airbnb_url')->label(__('admin.accommodations.airbnb_url'))->url(),
+                            TextInput::make('website_url')->label(__('admin.accommodations.website_url'))->url(),
                         ]),
                     ]),
-                Section::make('Izgled sajta')
+                Section::make(__('admin.accommodations.appearance_section'))
                     ->schema([
                         Grid::make(3)->schema([
                             Select::make('theme_key')
-                                ->label('Tema')
+                                ->label(__('admin.accommodations.theme'))
                                 ->options(fn (): array => ThemePreset::query()->where('is_active', true)->pluck('name', 'key')->all() ?: ['default' => 'Default'])
                                 ->default('default')
                                 ->native(false),
-                            TextInput::make('primary_color')->label('Primarna boja')->type('color'),
-                            TextInput::make('secondary_color')->label('Sekundarna boja')->type('color'),
+                            TextInput::make('primary_color')->label(__('admin.accommodations.primary_color'))->type('color'),
+                            TextInput::make('secondary_color')->label(__('admin.accommodations.secondary_color'))->type('color'),
                         ]),
                     ]),
-                Section::make('SEO')
+                Section::make(__('admin.accommodations.seo_section'))
                     ->schema([
                         Grid::make(2)->schema([
-                            TextInput::make('meta_title')->label('Meta naslov (SR)')->maxLength(255),
-                            TextInput::make('meta_title_en')->label('Meta title (EN)')->maxLength(255),
+                            TextInput::make('meta_title')->label(__('admin.accommodations.meta_title'))->maxLength(255),
+                            TextInput::make('meta_title_en')->label(__('admin.accommodations.meta_title_en'))->maxLength(255),
                         ]),
                         Grid::make(2)->schema([
-                            Textarea::make('meta_description')->label('Meta opis (SR)')->rows(4),
-                            Textarea::make('meta_description_en')->label('Meta description (EN)')->rows(4),
+                            Textarea::make('meta_description')->label(__('admin.accommodations.meta_description'))->rows(4),
+                            Textarea::make('meta_description_en')->label(__('admin.accommodations.meta_description_en'))->rows(4),
                         ]),
                     ]),
             ]);
@@ -217,59 +217,59 @@ class AccommodationResource extends Resource
             ->modifyQueryUsing(fn (Builder $query) => $query->with('user'))
             ->columns([
                 TextColumn::make('title')
-                    ->label('Naziv')
+                    ->label(__('admin.accommodations.title'))
                     ->searchable()
                     ->searchable(['title', 'title_en', 'slug'])
                     ->sortable()
                     ->formatStateUsing(fn (string $state, Accommodation $record): string => $record->isDemoAccommodation() ? $state.' [Demo]' : $state),
-                TextColumn::make('type')->label('Tip')->formatStateUsing(fn ($state) => $state?->label() ?? $state)->badge(),
-                TextColumn::make('status')->label('Status')->formatStateUsing(fn ($state) => $state?->label() ?? $state)->badge(),
-                TextColumn::make('user.name')->label('Vlasnik')->visible(fn (): bool => static::isAdminPanel()),
-                TextColumn::make('city')->label('Grad')->searchable(),
-                TextColumn::make('theme_key')->label('Tema')->badge(),
-                TextColumn::make('published_at')->label('Objavljen')->dateTime('d.m.Y H:i')->sortable(),
-                TextColumn::make('created_at')->label('Kreiran')->dateTime('d.m.Y H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('type')->label(__('admin.accommodations.type'))->formatStateUsing(fn ($state) => $state?->label() ?? $state)->badge(),
+                TextColumn::make('status')->label(__('admin.accommodations.status'))->formatStateUsing(fn ($state) => $state?->label() ?? $state)->badge(),
+                TextColumn::make('user.name')->label(__('admin.accommodations.owner'))->visible(fn (): bool => static::isAdminPanel()),
+                TextColumn::make('city')->label(__('admin.accommodations.city'))->searchable(),
+                TextColumn::make('theme_key')->label(__('admin.accommodations.theme'))->badge(),
+                TextColumn::make('published_at')->label(__('admin.accommodations.published_at'))->dateTime('d.m.Y H:i')->sortable(),
+                TextColumn::make('created_at')->label(__('admin.accommodations.created_at'))->dateTime('d.m.Y H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('status')->label('Status')->options(AccommodationStatus::options()),
-                SelectFilter::make('type')->label('Tip')->options(AccommodationType::options()),
+                SelectFilter::make('status')->label(__('admin.accommodations.status'))->options(AccommodationStatus::options()),
+                SelectFilter::make('type')->label(__('admin.accommodations.type'))->options(AccommodationType::options()),
                 SelectFilter::make('user_id')
-                    ->label('Vlasnik')
+                    ->label(__('admin.accommodations.owner'))
                     ->options(fn (): array => User::query()->role('owner')->orderBy('name')->pluck('name', 'id')->all())
                     ->visible(fn (): bool => static::isAdminPanel()),
                 SelectFilter::make('city')
-                    ->label('Grad')
+                    ->label(__('admin.accommodations.city'))
                     ->options(fn (): array => Accommodation::query()
                         ->whereNotNull('city')
                         ->orderBy('city')
                         ->pluck('city', 'city')
                         ->all()),
                 SelectFilter::make('theme_key')
-                    ->label('Tema')
+                    ->label(__('admin.accommodations.theme'))
                     ->options(fn (): array => ThemePreset::query()->orderBy('name')->pluck('name', 'key')->all()),
                 Filter::make('demo_only')
-                    ->label('Samo demo')
+                    ->label(__('admin.accommodations.demo_only'))
                     ->query(fn (Builder $query): Builder => $query->where('slug', 'villa-lavanda-tara'))
                     ->visible(fn (): bool => static::isAdminPanel()),
             ])
             ->recordActions([
-                ViewAction::make()->label('Pregled'),
-                EditAction::make()->label('Izmeni'),
-                Action::make('preview')->label('Preview sajta')->icon(Heroicon::OutlinedEye)->url(fn (Accommodation $record): string => $record->previewUrl(), shouldOpenInNewTab: true),
+                ViewAction::make()->label(__('admin.accommodations.view')),
+                EditAction::make()->label(__('admin.accommodations.edit')),
+                Action::make('preview')->label(__('admin.accommodations.preview_site'))->icon(Heroicon::OutlinedEye)->url(fn (Accommodation $record): string => $record->previewUrl(), shouldOpenInNewTab: true),
                 Action::make('build_site')
-                    ->label(fn (): string => static::isOwnerPanel() ? 'Build my site' : 'Objavi')
+                    ->label(fn (): string => static::isOwnerPanel() ? __('admin.accommodations.build_site') : __('admin.accommodations.publish'))
                     ->icon(Heroicon::OutlinedArrowUpCircle)
                     ->color('success')
                     ->visible(fn (Accommodation $record): bool => $record->status !== AccommodationStatus::Published)
                     ->disabled(fn (): bool => static::isOwnerPanel() && ! (auth()->user()?->canPublishSites() ?? false))
                     ->tooltip(fn (): ?string => static::isOwnerPanel() && ! (auth()->user()?->canPublishSites() ?? false)
-                        ? 'Objava sajta je dostupna nakon odobrenja super admina.'
+                        ? __('admin.accommodations.publish_locked_tooltip')
                         : null)
                     ->action(function (Accommodation $record): void {
                         if (static::isOwnerPanel() && ! (auth()->user()?->canPublishSites() ?? false)) {
                             Notification::make()
-                                ->title('Objava jos nije odobrena')
-                                ->body('Super admin mora da aktivira dozvolu za objavu sajta nakon uplate ili odobrenja.')
+                                ->title(__('admin.accommodations.publish_locked_title'))
+                                ->body(__('admin.accommodations.publish_locked_body'))
                                 ->warning()
                                 ->send();
 
@@ -282,7 +282,7 @@ class AccommodationResource extends Resource
                         ]);
                     }),
                 Action::make('unpublish')
-                    ->label(fn (): string => static::isOwnerPanel() ? 'Sakrij sajt' : 'Povuci objavu')
+                    ->label(fn (): string => static::isOwnerPanel() ? __('admin.accommodations.hide_site') : __('admin.accommodations.unpublish'))
                     ->icon(Heroicon::OutlinedArrowDownCircle)
                     ->color('gray')
                     ->visible(fn (Accommodation $record): bool => $record->status === AccommodationStatus::Published)
@@ -290,7 +290,7 @@ class AccommodationResource extends Resource
                         'status' => AccommodationStatus::Draft,
                         'published_at' => null,
                     ])),
-                DeleteAction::make()->label('Obrisi'),
+                DeleteAction::make()->label(__('admin.accommodations.delete')),
             ]);
     }
 

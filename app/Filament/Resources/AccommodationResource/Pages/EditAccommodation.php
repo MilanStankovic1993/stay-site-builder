@@ -20,11 +20,11 @@ class EditAccommodation extends EditRecord
     {
         return [
             Action::make('preview')
-                ->label('Preview sajta')
+                ->label(__('admin.accommodations.preview_site'))
                 ->icon(Heroicon::OutlinedEye)
                 ->url(fn (): string => $this->getRecord()->previewUrl(), shouldOpenInNewTab: true),
             Action::make('publish')
-                ->label(static::isOwnerPanel() ? 'Build my site' : 'Objavi')
+                ->label(static::isOwnerPanel() ? __('admin.accommodations.build_site') : __('admin.accommodations.publish'))
                 ->color('success')
                 ->visible(fn (): bool => $this->getRecord()->status !== AccommodationStatus::Published)
                 ->action(function (): void {
@@ -36,7 +36,7 @@ class EditAccommodation extends EditRecord
                     $this->refreshFormData(['status', 'published_at']);
                 }),
             Action::make('unpublish')
-                ->label(static::isOwnerPanel() ? 'Sakrij sajt' : 'Povuci objavu')
+                ->label(static::isOwnerPanel() ? __('admin.accommodations.hide_site') : __('admin.accommodations.unpublish'))
                 ->color('gray')
                 ->visible(fn (): bool => $this->getRecord()->status === AccommodationStatus::Published)
                 ->action(function (): void {
@@ -47,7 +47,7 @@ class EditAccommodation extends EditRecord
 
                     $this->refreshFormData(['status', 'published_at']);
                 }),
-            DeleteAction::make()->label('Obrisi'),
+            DeleteAction::make()->label(__('admin.accommodations.delete')),
         ];
     }
 

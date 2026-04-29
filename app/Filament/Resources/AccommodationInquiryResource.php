@@ -105,7 +105,7 @@ class AccommodationInquiryResource extends Resource
                 SelectFilter::make('source')
                     ->label(__('admin.inquiries.source'))
                     ->options([
-                        'website' => 'Website',
+                        'website' => __('site.storefront.website'),
                     ]),
             ])
             ->recordActions([

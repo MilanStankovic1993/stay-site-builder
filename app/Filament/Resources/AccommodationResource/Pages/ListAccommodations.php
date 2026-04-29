@@ -13,7 +13,7 @@ class ListAccommodations extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Dodaj smestaj'),
+            CreateAction::make()->label(__('admin.accommodations.add')),
         ];
     }
 }

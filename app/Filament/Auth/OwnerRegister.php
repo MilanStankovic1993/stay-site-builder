@@ -52,8 +52,10 @@ class OwnerRegister extends Register
         $this->sendEmailVerificationNotification($user);
 
         Notification::make()
-            ->title('Vas nalog je evidentiran')
-            ->body('Ako zelite da nalog bude aktivan, obratite se korisnickom servisu za dalje korake i aktivaciju.')
+            ->title(app()->getLocale() === 'en' ? 'Your account has been recorded' : 'Vas nalog je evidentiran')
+            ->body(app()->getLocale() === 'en'
+                ? 'If you want the account to become active, please contact support for the next activation steps.'
+                : 'Ako zelite da nalog bude aktivan, obratite se korisnickom servisu za dalje korake i aktivaciju.')
             ->success()
             ->send();
 

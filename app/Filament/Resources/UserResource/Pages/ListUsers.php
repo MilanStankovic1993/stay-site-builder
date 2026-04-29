@@ -13,7 +13,7 @@ class ListUsers extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Novi korisnik'),
+            CreateAction::make()->label(__('admin.actions.new_user')),
         ];
     }
 }

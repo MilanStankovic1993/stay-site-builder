@@ -105,7 +105,15 @@ class StorefrontTest extends TestCase
 
         $this->get("/s/{$accommodation->slug}")
             ->assertOk()
-            ->assertSee('Luxury theme')
+            ->assertSee(__('site.storefront.theme_luxury_name'))
             ->assertSee('Villa Aurora');
+    }
+
+    public function test_demo_theme_route_works_without_existing_published_accommodation(): void
+    {
+        $this->get(route('storefront.demo-theme', 'default'))
+            ->assertOk()
+            ->assertSee(__('site.storefront.demo_banner_default'))
+            ->assertSee('Villa Lavanda Tara');
     }
 }

@@ -92,7 +92,8 @@ class AccommodationController extends Controller
         $accommodation = Accommodation::query()
             ->with(['amenities', 'media'])
             ->published()
-            ->firstOrFail();
+            ->first()
+            ?? $this->makeDemoBaseAccommodation();
 
         $demoAccommodation = $this->buildDemoAccommodation($accommodation, $theme);
 
@@ -160,5 +161,43 @@ class AccommodationController extends Controller
         $demoAccommodation->setRelation('media', $accommodation->media);
 
         return $demoAccommodation;
+    }
+
+    protected function makeDemoBaseAccommodation(): Accommodation
+    {
+        $accommodation = new Accommodation([
+            'slug' => 'demo-accommodation',
+            'type' => \App\Enums\AccommodationType::Villa,
+            'status' => AccommodationStatus::Published,
+            'city' => 'Tara',
+            'region' => 'West Serbia',
+            'country' => 'Serbia',
+            'address' => 'Planinska 12',
+            'max_guests' => 6,
+            'bedrooms' => 3,
+            'bathrooms' => 2,
+            'size_m2' => 120,
+            'price_from' => 180,
+            'currency' => 'EUR',
+            'contact_name' => 'StaySite Host',
+            'contact_phone' => '+381 60 123 4567',
+            'contact_email' => 'hello@staysite.test',
+            'whatsapp_number' => '+381601234567',
+            'viber_number' => '+381601234567',
+            'website_url' => 'https://example.com',
+            'instagram_url' => 'https://instagram.com',
+            'facebook_url' => 'https://facebook.com',
+            'google_maps_url' => 'https://maps.google.com',
+        ]);
+
+        $accommodation->setRelation('amenities', collect([
+            (object) ['name' => 'Wi-Fi'],
+            (object) ['name' => 'Parking'],
+            (object) ['name' => 'Jacuzzi'],
+            (object) ['name' => 'Terrace'],
+        ]));
+        $accommodation->setRelation('media', collect());
+
+        return $accommodation;
     }
 }

@@ -13,7 +13,7 @@ class ListAmenities extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Novi sadrzaj'),
+            CreateAction::make()->label(__('admin.actions.new_amenity')),
         ];
     }
 }
