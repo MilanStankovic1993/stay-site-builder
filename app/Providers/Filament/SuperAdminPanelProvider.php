@@ -4,6 +4,8 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\AdminDashboard;
+use App\Filament\Resources\BillingSubscriptionResource;
+use App\Filament\Resources\BillingTransactionResource;
 use App\Filament\Pages\PlatformSettingsPage;
 use App\Filament\Resources\AccommodationInquiryResource;
 use App\Filament\Resources\AccommodationResource;
@@ -48,6 +50,8 @@ class SuperAdminPanelProvider extends PanelProvider
             ->plugin(FilamentShieldPlugin::make())
             ->resources([
                 UserResource::class,
+                BillingSubscriptionResource::class,
+                BillingTransactionResource::class,
                 AccommodationResource::class,
                 AccommodationInquiryResource::class,
                 AmenityResource::class,

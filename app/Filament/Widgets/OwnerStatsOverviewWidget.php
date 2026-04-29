@@ -40,6 +40,8 @@ class OwnerStatsOverviewWidget extends StatsOverviewWidget
             ->where('user_id', $user->id)
             ->where('status', AccommodationStatus::Published)
             ->count();
+        $canPublish = $user?->canPublishSites() ?? false;
+        $siteLimit = $user?->publishingSiteLimit() ?? 0;
 
         $inquiriesCount = AccommodationInquiry::query()
             ->where('user_id', $user->id)
@@ -61,8 +63,12 @@ class OwnerStatsOverviewWidget extends StatsOverviewWidget
 
             Stat::make(app()->getLocale() === 'en' ? 'Published websites' : 'Objavljeni sajtovi', $publishedCount)
                 ->description($publishedCount
-                    ? (app()->getLocale() === 'en' ? 'At least one website is publicly available.' : 'Bar jedan sajt je javno dostupan.')
-                    : (app()->getLocale() === 'en' ? 'There is no publicly published website yet.' : 'Jos nema javno objavljenog sajta.'))
+                    ? (app()->getLocale() === 'en'
+                        ? "You are using {$publishedCount} of {$siteLimit} publishing slots."
+                        : "Koristite {$publishedCount} od {$siteLimit} publish slotova.")
+                    : ($canPublish
+                        ? (app()->getLocale() === 'en' ? 'There is no publicly published website yet.' : 'Jos nema javno objavljenog sajta.')
+                        : (app()->getLocale() === 'en' ? 'Activate billing to unlock publishing.' : 'Aktivirajte naplatu da otkljucate objavu.')))
                 ->descriptionIcon(Heroicon::OutlinedGlobeAlt)
                 ->color($publishedCount ? Color::Emerald : Color::Amber)
                 ->url($latestAccommodation?->status === AccommodationStatus::Published ? $latestAccommodation->publicUrl() : AccommodationResource::getUrl(panel: 'dashboard'), shouldOpenInNewTab: $publishedCount > 0),

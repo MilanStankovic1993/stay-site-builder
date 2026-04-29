@@ -328,6 +328,11 @@
                     <div class="owner-builder-alert">
                         <p><strong>{{ __('admin.builder.publish_locked_title') }}</strong></p>
                         <p>{{ __('admin.builder.publish_locked_text') }}</p>
+                        <div class="owner-builder-actions" style="margin-top: 0.9rem;">
+                            <a href="{{ $billingUrl }}" class="owner-builder-btn owner-builder-btn--primary">
+                                {{ __('admin.billing.activate_cta') }}
+                            </a>
+                        </div>
                     </div>
                 @endif
 
@@ -352,6 +357,11 @@
         <section class="owner-builder-side">
             <div class="owner-builder-card owner-builder-panel">
                 <p class="owner-builder-panel__eyebrow">{{ __('admin.builder.next_action') }}</p>
+                @if ($hasPublishingSubscription)
+                    <p class="owner-builder-panel__text" style="margin-top: 0.45rem;">
+                        {{ __('admin.builder.plan_usage') }} {{ $publishedSitesCount }} / {{ $siteLimit }}
+                    </p>
+                @endif
                 @if ($accommodation)
                     <div class="owner-builder-actions" style="margin-top: 0.8rem; align-items: center;">
                         <h3 class="owner-builder-panel__title" style="margin: 0;">{{ $accommodation->display_title }}</h3>
@@ -370,12 +380,17 @@
                     </p>
 
                     <div class="owner-builder-actions">
-                        <a href="{{ $accommodation->previewUrl() }}" target="_blank" class="owner-builder-btn owner-builder-btn--primary">
+                        <a href="{{ $accommodation->previewUrl() }}" target="_blank" class="owner-builder-btn {{ $canPublish ? 'owner-builder-btn--primary' : 'owner-builder-btn--secondary' }}">
                             {{ __('admin.builder.preview') }}
                         </a>
                         <a href="{{ \App\Filament\Resources\AccommodationResource::getUrl('edit', ['record' => $accommodation], panel: 'dashboard') }}" class="owner-builder-btn owner-builder-btn--secondary">
                             {{ __('admin.builder.edit') }}
                         </a>
+                        @if (! $canPublish)
+                            <a href="{{ $billingUrl }}" class="owner-builder-btn owner-builder-btn--primary">
+                                {{ __('admin.billing.activate_cta') }}
+                            </a>
+                        @endif
                         @if ($accommodation->status === \App\Enums\AccommodationStatus::Published)
                             <a href="{{ $accommodation->publicUrl() }}" target="_blank" class="owner-builder-btn owner-builder-btn--success">
                                 {{ __('admin.builder.open_live') }}

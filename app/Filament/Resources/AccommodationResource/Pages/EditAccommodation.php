@@ -7,8 +7,11 @@ use App\Filament\Concerns\InteractsWithPanelContext;
 use App\Filament\Resources\AccommodationResource;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class EditAccommodation extends EditRecord
 {
@@ -27,7 +30,43 @@ class EditAccommodation extends EditRecord
                 ->label(static::isOwnerPanel() ? __('admin.accommodations.build_site') : __('admin.accommodations.publish'))
                 ->color('success')
                 ->visible(fn (): bool => $this->getRecord()->status !== AccommodationStatus::Published)
+                ->disabled(fn (): bool => static::isOwnerPanel() && ! (auth()->user()?->hasAvailablePublishingSlot($this->getRecord()) ?? false))
+                ->tooltip(fn (): ?string => static::isOwnerPanel() && ! (auth()->user()?->hasAvailablePublishingSlot($this->getRecord()) ?? false)
+                    ? __('admin.accommodations.publish_locked_tooltip')
+                    : null)
                 ->action(function (): void {
+                    $user = auth()->user();
+
+                    if (static::isOwnerPanel() && ! ($user?->hasAvailablePublishingSlot($this->getRecord()) ?? false)) {
+                        Notification::make()
+                            ->title(__('admin.accommodations.publish_locked_title'))
+                            ->body(__('admin.accommodations.publish_locked_body'))
+                            ->warning()
+                            ->send();
+
+                        return;
+                    }
+
+                    if (static::isOwnerPanel() && $user?->requiresPublishingSetupFee()) {
+                        try {
+                            $user->chargePublishingSetupFee();
+                        } catch (Throwable $exception) {
+                            Log::warning('Unable to charge publishing setup fee.', [
+                                'user_id' => $user->id,
+                                'accommodation_id' => $this->getRecord()->id,
+                                'message' => $exception->getMessage(),
+                            ]);
+
+                            Notification::make()
+                                ->title(__('admin.accommodations.publish_charge_failed_title'))
+                                ->body(__('admin.accommodations.publish_charge_failed_body'))
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+                    }
+
                     $this->getRecord()->update([
                         'status' => AccommodationStatus::Published,
                         'published_at' => now(),

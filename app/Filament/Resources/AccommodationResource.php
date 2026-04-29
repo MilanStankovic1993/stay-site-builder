@@ -29,7 +29,9 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Throwable;
 
 class AccommodationResource extends Resource
 {
@@ -261,12 +263,14 @@ class AccommodationResource extends Resource
                     ->icon(Heroicon::OutlinedArrowUpCircle)
                     ->color('success')
                     ->visible(fn (Accommodation $record): bool => $record->status !== AccommodationStatus::Published)
-                    ->disabled(fn (): bool => static::isOwnerPanel() && ! (auth()->user()?->canPublishSites() ?? false))
-                    ->tooltip(fn (): ?string => static::isOwnerPanel() && ! (auth()->user()?->canPublishSites() ?? false)
+                    ->disabled(fn (Accommodation $record): bool => static::isOwnerPanel() && ! (auth()->user()?->hasAvailablePublishingSlot($record) ?? false))
+                    ->tooltip(fn (Accommodation $record): ?string => static::isOwnerPanel() && ! (auth()->user()?->hasAvailablePublishingSlot($record) ?? false)
                         ? __('admin.accommodations.publish_locked_tooltip')
                         : null)
                     ->action(function (Accommodation $record): void {
-                        if (static::isOwnerPanel() && ! (auth()->user()?->canPublishSites() ?? false)) {
+                        $user = auth()->user();
+
+                        if (static::isOwnerPanel() && ! ($user?->hasAvailablePublishingSlot($record) ?? false)) {
                             Notification::make()
                                 ->title(__('admin.accommodations.publish_locked_title'))
                                 ->body(__('admin.accommodations.publish_locked_body'))
@@ -274,6 +278,26 @@ class AccommodationResource extends Resource
                                 ->send();
 
                             return;
+                        }
+
+                        if (static::isOwnerPanel() && $user?->requiresPublishingSetupFee()) {
+                            try {
+                                $user->chargePublishingSetupFee();
+                            } catch (Throwable $exception) {
+                                Log::warning('Unable to charge publishing setup fee.', [
+                                    'user_id' => $user->id,
+                                    'accommodation_id' => $record->id,
+                                    'message' => $exception->getMessage(),
+                                ]);
+
+                                Notification::make()
+                                    ->title(__('admin.accommodations.publish_charge_failed_title'))
+                                    ->body(__('admin.accommodations.publish_charge_failed_body'))
+                                    ->danger()
+                                    ->send();
+
+                                return;
+                            }
                         }
 
                         $record->update([

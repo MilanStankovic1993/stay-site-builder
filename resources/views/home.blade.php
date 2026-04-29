@@ -8,6 +8,23 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
+    @php
+        $pricingTiers = collect(config('site-billing.plans', []))
+            ->groupBy('tier')
+            ->map(function ($plans, $tier) {
+                $monthly = $plans->firstWhere('interval', 'month');
+                $yearly = $plans->firstWhere('interval', 'year');
+
+                return [
+                    'tier' => $tier,
+                    'monthly' => $monthly,
+                    'yearly' => $yearly,
+                    'name' => $monthly['name'] ?? $yearly['name'] ?? strtoupper((string) $tier),
+                    'site_limit' => (int) (($monthly['site_limit'] ?? $yearly['site_limit']) ?? 0),
+                ];
+            })
+            ->values();
+    @endphp
     <main class="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,_rgba(205,170,106,0.22),_transparent_22%),linear-gradient(180deg,_#f8f1e4_0%,_#efe5d2_45%,_#f5efe4_100%)]">
         <section class="relative isolate">
             <div class="absolute inset-x-0 top-0 -z-10 h-[34rem] bg-[radial-gradient(circle_at_20%_20%,_rgba(195,164,106,0.22),_transparent_35%),radial-gradient(circle_at_80%_0%,_rgba(31,58,50,0.16),_transparent_25%)]"></div>
@@ -144,6 +161,60 @@
                         <p class="text-lg font-semibold text-[var(--color-brand-forest)]">{{ __('site.home.benefit_4_title') }}</p>
                         <p class="mt-2 text-sm leading-7 text-slate-600">{{ __('site.home.benefit_4_text') }}</p>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mx-auto max-w-7xl px-6 pb-24 sm:px-8 lg:px-10">
+            <div class="rounded-[2.4rem] border border-[rgba(23,51,41,0.1)] bg-[#173329] p-8 text-white shadow-[0_35px_110px_rgba(16,33,27,0.2)] lg:p-10">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.35em] text-[var(--color-brand-gold)]">{{ __('site.home.pricing_kicker') }}</p>
+                        <h2 class="mt-4 max-w-3xl font-serif text-4xl leading-tight text-white sm:text-5xl">{{ __('site.home.pricing_title') }}</h2>
+                        <p class="mt-4 max-w-2xl text-base leading-8 text-white/72">{{ __('site.home.pricing_description') }}</p>
+                    </div>
+                    <div class="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm text-white/72">
+                        {{ __('site.home.pricing_setup_fee') }}
+                    </div>
+                </div>
+
+                <div class="mt-10 grid gap-5 lg:grid-cols-3">
+                    @foreach ($pricingTiers as $index => $plan)
+                        <article class="rounded-[1.8rem] border {{ $index === 1 ? 'border-[rgba(205,170,106,0.45)] bg-[rgba(255,255,255,0.08)]' : 'border-white/10 bg-white/5' }} p-6">
+                            @if ($index === 1)
+                                <span class="inline-flex rounded-full border border-[rgba(205,170,106,0.4)] bg-[rgba(205,170,106,0.14)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-[var(--color-brand-gold)]">
+                                    {{ __('site.home.pricing_recommended') }}
+                                </span>
+                            @endif
+
+                            <p class="mt-3 text-xs uppercase tracking-[0.3em] text-white/55">{{ strtoupper((string) $plan['tier']) }}</p>
+                            <h3 class="mt-3 font-serif text-4xl text-white">{{ $plan['name'] }}</h3>
+                            <p class="mt-3 text-sm leading-7 text-white/72">
+                                {{ trans_choice('site.home.pricing_slots', $plan['site_limit'], ['count' => $plan['site_limit']]) }}
+                            </p>
+
+                            <div class="mt-6 rounded-[1.35rem] bg-black/10 p-4">
+                                <p class="text-sm uppercase tracking-[0.22em] text-white/45">{{ __('site.home.pricing_monthly') }}</p>
+                                <p class="mt-2 text-3xl font-semibold text-[var(--color-brand-gold)]">
+                                    {{ number_format(((int) ($plan['monthly']['amount'] ?? 0)) / 100, 2) }} EUR
+                                </p>
+                            </div>
+
+                            <div class="mt-4 rounded-[1.35rem] bg-white/6 p-4">
+                                <p class="text-sm uppercase tracking-[0.22em] text-white/45">{{ __('site.home.pricing_yearly') }}</p>
+                                <p class="mt-2 text-3xl font-semibold text-white">
+                                    {{ number_format(((int) ($plan['yearly']['amount'] ?? 0)) / 100, 2) }} EUR
+                                </p>
+                                <p class="mt-2 text-sm text-white/60">{{ __('site.home.pricing_yearly_note') }}</p>
+                            </div>
+
+                            <ul class="mt-6 space-y-3 text-sm leading-7 text-white/72">
+                                <li>{{ __('site.home.pricing_feature_publish') }}</li>
+                                <li>{{ __('site.home.pricing_feature_drafts') }}</li>
+                                <li>{{ __('site.home.pricing_feature_direct') }}</li>
+                            </ul>
+                        </article>
+                    @endforeach
                 </div>
             </div>
         </section>

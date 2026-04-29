@@ -22,6 +22,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Paddle\Subscription;
 use Spatie\Permission\Models\Role;
 
 class UserResource extends Resource
@@ -87,10 +88,25 @@ class UserResource extends Resource
                             ->helperText(__('admin.users.active_help'))
                             ->inline(false),
                         Toggle::make('can_publish_sites')
-                            ->label(__('admin.users.publish'))
-                            ->helperText(__('admin.users.publish_help'))
+                            ->label(__('admin.users.manual_publish'))
+                            ->helperText(__('admin.users.manual_publish_help'))
                             ->default(false)
+                            ->columnSpan(1)
                             ->inline(false),
+                        Select::make('manual_billing_plan_key')
+                            ->label(__('admin.users.manual_package'))
+                            ->options(fn (): array => collect(config('site-billing.plans', []))
+                                ->mapWithKeys(fn (array $plan, string $key): array => [$key => (string) ($plan['name'] ?? $key)])
+                                ->all())
+                            ->helperText(__('admin.users.manual_package_help'))
+                            ->placeholder(__('admin.users.manual_package_placeholder'))
+                            ->native(false)
+                            ->searchable()
+                            ->columnSpan(1),
+                        TextInput::make('manual_billing_activated_at')
+                            ->label(__('admin.users.manual_package_activated_at'))
+                            ->disabled()
+                            ->dehydrated(false),
                     ]),
                 ]),
         ]);
@@ -108,7 +124,26 @@ class UserResource extends Resource
                 TextColumn::make('email')->label(__('admin.users.email'))->searchable(),
                 TextColumn::make('roles.name')->label(__('admin.users.roles'))->badge(),
                 IconColumn::make('is_active')->label(__('admin.users.active_yes'))->boolean(),
-                IconColumn::make('can_publish_sites')->label(__('admin.users.publish'))->boolean(),
+                IconColumn::make('can_publish_sites')->label(__('admin.users.manual_publish'))->boolean(),
+                TextColumn::make('current_package')
+                    ->label(__('admin.users.current_package'))
+                    ->state(fn (User $record): string => $record->currentPublishingPlanLabel())
+                    ->badge()
+                    ->color(fn (User $record): string => $record->publishingAccessColor()),
+                TextColumn::make('package_source')
+                    ->label(__('admin.users.package_source'))
+                    ->state(fn (User $record): string => $record->publishingPlanSourceLabel())
+                    ->badge(),
+                TextColumn::make('publishing_slots')
+                    ->label(__('admin.users.package_slots'))
+                    ->state(fn (User $record): string => $record->canPublishSites()
+                        ? $record->publishedSitesCount().' / '.$record->publishingSiteLimit()
+                        : '0 / 0'),
+                TextColumn::make('publishing_access')
+                    ->label(__('admin.users.billing_status'))
+                    ->state(fn (User $record): string => $record->publishingAccessLabel())
+                    ->badge()
+                    ->color(fn (User $record): string => $record->publishingAccessColor()),
                 TextColumn::make('created_at')->label(__('admin.users.created_at'))->dateTime('d.m.Y H:i')->sortable(),
             ])
             ->filters([
@@ -119,11 +154,54 @@ class UserResource extends Resource
                         '0' => __('admin.users.active_no'),
                     ]),
                 SelectFilter::make('can_publish_sites')
-                    ->label(__('admin.users.publish'))
+                    ->label(__('admin.users.manual_publish'))
                     ->options([
                         '1' => __('admin.users.approved'),
                         '0' => __('admin.users.not_approved'),
                     ]),
+                SelectFilter::make('publishing_access')
+                    ->label(__('admin.users.billing_status'))
+                    ->options([
+                        'paid' => __('admin.users.billing_paid'),
+                        'manual_plan' => __('admin.users.billing_manual_plan'),
+                        'manual' => __('admin.users.billing_manual'),
+                        'locked' => __('admin.users.billing_locked'),
+                        'admin' => __('admin.users.billing_admin'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        $publishingSubscription = fn ($subscriptionQuery) => $subscriptionQuery
+                            ->where('type', User::PUBLISHING_SUBSCRIPTION_TYPE)
+                            ->where(function ($statusQuery): void {
+                                $statusQuery
+                                    ->where('status', Subscription::STATUS_ACTIVE)
+                                    ->orWhere('status', Subscription::STATUS_TRIALING);
+                            });
+
+                        return match ($data['value'] ?? null) {
+                            'paid' => $query->whereHas('subscriptions', $publishingSubscription),
+                            'manual_plan' => $query
+                                ->whereNotNull('manual_billing_plan_key')
+                                ->whereDoesntHave('subscriptions', $publishingSubscription)
+                                ->whereDoesntHave('roles', fn ($roleQuery) => $roleQuery->where('name', 'super_admin')),
+                            'manual' => $query
+                                ->where('can_publish_sites', true)
+                                ->whereNull('manual_billing_plan_key')
+                                ->whereDoesntHave('subscriptions', $publishingSubscription)
+                                ->whereDoesntHave('roles', fn ($roleQuery) => $roleQuery->where('name', 'super_admin')),
+                            'locked' => $query
+                                ->where('can_publish_sites', false)
+                                ->whereNull('manual_billing_plan_key')
+                                ->whereDoesntHave('subscriptions', $publishingSubscription)
+                                ->whereDoesntHave('roles', fn ($roleQuery) => $roleQuery->where('name', 'super_admin')),
+                            'admin' => $query->whereHas('roles', fn ($roleQuery) => $roleQuery->where('name', 'super_admin')),
+                            default => $query,
+                        };
+                    }),
+                SelectFilter::make('manual_billing_plan_key')
+                    ->label(__('admin.users.current_package'))
+                    ->options(fn (): array => collect(config('site-billing.plans', []))
+                        ->mapWithKeys(fn (array $plan, string $key): array => [$key => (string) ($plan['name'] ?? $key)])
+                        ->all()),
                 SelectFilter::make('roles')
                     ->label(__('admin.users.role'))
                     ->relationship('roles', 'name')

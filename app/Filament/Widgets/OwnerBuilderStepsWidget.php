@@ -30,11 +30,17 @@ class OwnerBuilderStepsWidget extends Widget
         $hasContact = $hasAccommodation && (filled($accommodation->contact_phone) || filled($accommodation->contact_email));
         $isPublished = $hasAccommodation && $accommodation->status === AccommodationStatus::Published;
         $canPublish = $user?->canPublishSites() ?? false;
+        $hasPublishingSubscription = $user?->hasPublishingSubscription() ?? false;
+        $siteLimit = $user?->publishingSiteLimit() ?? 0;
+        $publishedSitesCount = $user?->publishedSitesCount() ?? 0;
 
         return [
             'accommodation' => $accommodation,
             'user' => $user,
             'canPublish' => $canPublish,
+            'hasPublishingSubscription' => $hasPublishingSubscription,
+            'siteLimit' => $siteLimit,
+            'publishedSitesCount' => $publishedSitesCount,
             'steps' => [
                 [
                     'title' => __('admin.builder.step_1_title'),
@@ -53,12 +59,13 @@ class OwnerBuilderStepsWidget extends Widget
                 ],
                 [
                     'title' => __('admin.builder.step_4_title'),
-                    'description' => $canPublish
+                    'description' => $user?->hasAvailablePublishingSlot($accommodation)
                         ? __('admin.builder.step_4_ready')
                         : __('admin.builder.step_4_waiting'),
                     'done' => $isPublished,
                 ],
             ],
+            'billingUrl' => route('dashboard.billing'),
             'createUrl' => AccommodationResource::getUrl('create', panel: 'dashboard'),
             'manageUrl' => AccommodationResource::getUrl(panel: 'dashboard'),
             'inquiriesUrl' => AccommodationInquiryResource::getUrl(panel: 'dashboard'),

@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Filament\Widgets\AdminPendingApprovalsWidget;
 use App\Filament\Widgets\AdminPlatformStatsOverviewWidget;
 use App\Filament\Widgets\AdminThemeShowcaseWidget;
+use App\Filament\Widgets\AdminBillingOverviewWidget;
 use Filament\Pages\Dashboard;
 use Illuminate\Contracts\Support\Htmlable;
 
@@ -29,6 +30,7 @@ class AdminDashboard extends Dashboard
     {
         return [
             AdminPlatformStatsOverviewWidget::class,
+            AdminBillingOverviewWidget::class,
             AdminPendingApprovalsWidget::class,
             AdminThemeShowcaseWidget::class,
         ];
