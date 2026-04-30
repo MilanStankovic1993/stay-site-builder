@@ -67,7 +67,6 @@ class OwnerRegister extends Register
         $user = parent::handleRegistration([
             ...$data,
             'is_active' => false,
-            'can_publish_sites' => false,
         ]);
 
         $user->syncRoles([Role::findOrCreate('owner')]);

@@ -9,6 +9,8 @@
 - Podesen MySQL i testirana konekcija
 - Podesen mail server
 - HTTPS aktivan
+- Popunjeni Paddle kljucevi i webhook secret
+- Popunjeni svi `SITE_BILLING_*_PRICE_ID` kljucevi
 
 ## 2. Deploy komande
 
@@ -19,12 +21,17 @@ composer install --no-dev --optimize-autoloader
 npm install
 npm run build
 php artisan migrate --force
-php artisan db:seed --force
 php artisan storage:link
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan optimize
+```
+
+Ako je prvi deploy i trebaju demo/admin podaci:
+
+```bash
+php artisan db:seed --force
 ```
 
 ## 3. Osnovni panel flow
@@ -35,7 +42,7 @@ php artisan optimize
 - super admin ne moze na `/dashboard`
 - registracija pravi neaktivan owner nalog
 - super admin moze da aktivira nalog
-- super admin moze da odobri objavu sajta
+- super admin moze da dodeli i ukloni rucni paket
 
 ## 4. Owner flow
 
@@ -44,8 +51,10 @@ php artisan optimize
 - owner vidi samo svoje upite
 - owner moze da unese SR i EN sadrzaj
 - owner moze da otvori preview
-- owner bez dozvole ne moze da objavi sajt
-- owner sa dozvolom moze da objavi sajt
+- owner bez paketa / pretplate ne moze da objavi sajt
+- owner sa rucnim paketom moze da objavi sajt
+- owner sa aktivnom pretplatom moze da objavi sajt
+- owner sa punim slotovima dobija upgrade CTA
 
 ## 5. Public website flow
 
@@ -65,6 +74,9 @@ php artisan optimize
 - teme lista radi bez greske
 - platform settings radi bez greske
 - admin dashboard widgeti rade
+- billing tab na edit korisnika radi bez greske
+- pretplate lista radi bez greske
+- uplate lista radi bez greske
 
 ## 7. Sadrzaj i UX
 
@@ -81,10 +93,12 @@ php artisan optimize
 - queue worker je podignut ako se koristi `QUEUE_CONNECTION=database`
 - error logging je provereno
 - monitoring / uptime alat je dodat ako postoji
+- Paddle webhook je vezan za produkcioni domen i eventovi prolaze
 
 ## 9. Posle launch-a
 
 - kreirati prvi pravi owner nalog
 - testirati jedan realan publish flow
+- testirati jedan realan checkout / plan upgrade flow
 - testirati jedan realan inquiry flow
 - proveriti da li slike i media upload rade sa produkcionog domena

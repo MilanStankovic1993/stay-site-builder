@@ -43,7 +43,6 @@ class OwnerPanelTest extends TestCase
 
         $admin = User::factory()->create([
             'is_active' => true,
-            'can_publish_sites' => true,
         ]);
 
         $admin->assignRole('super_admin');
@@ -137,7 +136,6 @@ class OwnerPanelTest extends TestCase
 
         $user = User::factory()->create([
             'is_active' => $isActive,
-            'can_publish_sites' => false,
         ]);
 
         $user->assignRole('owner');

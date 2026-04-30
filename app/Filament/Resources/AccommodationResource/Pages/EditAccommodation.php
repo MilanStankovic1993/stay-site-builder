@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AccommodationResource\Pages;
 
+use App\Actions\PublishAccommodation;
 use App\Enums\AccommodationStatus;
 use App\Filament\Concerns\InteractsWithPanelContext;
 use App\Filament\Resources\AccommodationResource;
@@ -10,8 +11,6 @@ use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class EditAccommodation extends EditRecord
 {
@@ -35,9 +34,13 @@ class EditAccommodation extends EditRecord
                     ? __('admin.accommodations.publish_locked_tooltip')
                     : null)
                 ->action(function (): void {
-                    $user = auth()->user();
+                    $result = app(PublishAccommodation::class)->handle(
+                        user: auth()->user(),
+                        accommodation: $this->getRecord(),
+                        enforceBillingRules: static::isOwnerPanel(),
+                    );
 
-                    if (static::isOwnerPanel() && ! ($user?->hasAvailablePublishingSlot($this->getRecord()) ?? false)) {
+                    if ($result === PublishAccommodation::RESULT_LOCKED) {
                         Notification::make()
                             ->title(__('admin.accommodations.publish_locked_title'))
                             ->body(__('admin.accommodations.publish_locked_body'))
@@ -47,33 +50,26 @@ class EditAccommodation extends EditRecord
                         return;
                     }
 
-                    if (static::isOwnerPanel() && $user?->requiresPublishingSetupFee()) {
-                        try {
-                            $user->chargePublishingSetupFee();
-                        } catch (Throwable $exception) {
-                            Log::warning('Unable to charge publishing setup fee.', [
-                                'user_id' => $user->id,
-                                'accommodation_id' => $this->getRecord()->id,
-                                'message' => $exception->getMessage(),
-                            ]);
+                    if ($result === PublishAccommodation::RESULT_BILLING_FAILED) {
+                        Notification::make()
+                            ->title(__('admin.accommodations.publish_charge_failed_title'))
+                            ->body(__('admin.accommodations.publish_charge_failed_body'))
+                            ->danger()
+                            ->send();
 
-                            Notification::make()
-                                ->title(__('admin.accommodations.publish_charge_failed_title'))
-                                ->body(__('admin.accommodations.publish_charge_failed_body'))
-                                ->danger()
-                                ->send();
-
-                            return;
-                        }
+                        return;
                     }
-
-                    $this->getRecord()->update([
-                        'status' => AccommodationStatus::Published,
-                        'published_at' => now(),
-                    ]);
 
                     $this->refreshFormData(['status', 'published_at']);
                 }),
+            Action::make('upgrade_plan')
+                ->label(__('admin.accommodations.upgrade_plan'))
+                ->icon(Heroicon::OutlinedRocketLaunch)
+                ->color('warning')
+                ->visible(fn (): bool => static::isOwnerPanel()
+                    && $this->getRecord()->status !== AccommodationStatus::Published
+                    && (auth()->user()?->hasReachedPublishingLimit($this->getRecord()) ?? false))
+                ->url(fn (): string => route('dashboard.billing')),
             Action::make('unpublish')
                 ->label(static::isOwnerPanel() ? __('admin.accommodations.hide_site') : __('admin.accommodations.unpublish'))
                 ->color('gray')

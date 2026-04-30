@@ -106,6 +106,12 @@
             }
         }
 
+        @media (min-width: 1080px) {
+            .billing-grid--plans {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
         .billing-card {
             padding: 1.5rem;
         }
@@ -192,6 +198,7 @@
             text-decoration: none;
             font-weight: 800;
             transition: transform 180ms ease, box-shadow 180ms ease;
+            cursor: pointer;
         }
 
         .billing-btn:hover {
@@ -202,6 +209,7 @@
             background: linear-gradient(135deg, #0f766e, #10b981);
             color: white;
             box-shadow: 0 16px 34px rgba(16, 185, 129, 0.18);
+            border: 0;
         }
 
         .billing-btn--secondary {
@@ -257,6 +265,10 @@
                     @endif
                 </div>
 
+                @if ($user->hasReachedPublishingLimit())
+                    <div class="billing-alert billing-alert--warning">{{ __('admin.billing.limit_reached_notice') }}</div>
+                @endif
+
                 @if ($activeSubscription->onGracePeriod())
                     <div class="billing-alert billing-alert--warning">
                         {{ __('admin.billing.cancel_pending') }}
@@ -272,45 +284,16 @@
             @endif
         </section>
 
-        @if (! $activeSubscription)
-            <section class="billing-grid">
-                @foreach ($plans as $planKey => $plan)
-                    <article class="billing-card {{ $planKey === $recommendedPlan ? 'is-recommended' : '' }}">
-                        @if ($planKey === $recommendedPlan)
-                            <span class="billing-badge">{{ __('admin.billing.recommended') }}</span>
-                        @endif
-
-                        <h2 class="billing-plan">{{ $plan['name'] }}</h2>
-                        <p class="billing-price">
-                            {{ number_format(((int) $plan['amount']) / 100, 2) }} {{ config('cashier.currency', 'EUR') }}
-                        </p>
-                        <p class="billing-desc">{{ $plan['description'] }}</p>
-                        <p class="billing-meta">
-                            {{ $plan['interval'] === 'year' ? __('admin.billing.interval_yearly') : __('admin.billing.interval_monthly') }}
-                        </p>
-                        <ul class="billing-list">
-                            <li>{{ trans_choice('admin.billing.site_slots', $plan['site_limit'], ['count' => $plan['site_limit']]) }}</li>
-                            <li>{{ __('admin.billing.draft_unlimited') }}</li>
-                        </ul>
-
-                        @if ($setupReady)
-                            <a href="{{ route('dashboard.billing.checkout', ['plan' => $planKey]) }}" class="billing-btn billing-btn--primary">
-                                {{ __('admin.billing.activate_plan') }}
-                            </a>
-                        @endif
-                    </article>
-                @endforeach
-            </section>
-        @else
+        @if ($activeSubscription)
             <section class="billing-grid">
                 <article class="billing-card">
                     <span class="billing-badge">{{ __('admin.billing.active_badge') }}</span>
                     <p class="billing-kicker">{{ __('admin.billing.current_plan') }}</p>
-                    <h2 class="billing-plan">{{ __('admin.billing.publish_enabled_title') }}</h2>
+                    <h2 class="billing-plan">{{ $user->currentPublishingPlanLabel() }}</h2>
                     <p class="billing-desc">{{ __('admin.billing.publish_enabled_text') }}</p>
                     <p class="billing-meta">{{ __('admin.billing.site_capacity') }} {{ $user->publishedSitesCount() }} / {{ $user->publishingSiteLimit() }}</p>
                     <p class="billing-meta">{{ __('admin.billing.subscription_status') }} {{ $activeSubscription->status }}</p>
-                    <p class="billing-meta">{{ __('admin.billing.started_at') }} {{ $activeSubscription->created_at?->format('d.m.Y H:i') ?? '—' }}</p>
+                    <p class="billing-meta">{{ __('admin.billing.started_at') }} {{ $activeSubscription->created_at?->format('d.m.Y H:i') ?? '-' }}</p>
 
                     @if ($nextPayment)
                         <p class="billing-meta">
@@ -340,6 +323,10 @@
                             </form>
                         @endif
 
+                        @if ($user->hasReachedPublishingLimit())
+                            <a href="#billing-plans" class="billing-btn billing-btn--primary">{{ __('admin.billing.upgrade_cta') }}</a>
+                        @endif
+
                         <a href="{{ url('/dashboard') }}" class="billing-btn billing-btn--secondary">{{ __('admin.billing.back_to_dashboard') }}</a>
                     </div>
                 </article>
@@ -352,10 +339,52 @@
                     <ul class="billing-list">
                         <li>{{ __('admin.billing.manage_slot_note') }}</li>
                         <li>{{ __('admin.billing.manage_setup_note') }}</li>
+                        <li>{{ __('admin.billing.manage_upgrade_note') }}</li>
                     </ul>
                 </article>
             </section>
         @endif
+
+        <section class="billing-grid billing-grid--plans" id="billing-plans">
+            @foreach ($plans as $planKey => $plan)
+                @php
+                    $isCurrentPlan = $currentPlanKey === $planKey;
+                @endphp
+                <article class="billing-card {{ $planKey === $recommendedPlan ? 'is-recommended' : '' }}">
+                    @if ($isCurrentPlan)
+                        <span class="billing-badge">{{ __('admin.billing.current_plan_badge') }}</span>
+                    @elseif ($planKey === $recommendedPlan)
+                        <span class="billing-badge">{{ __('admin.billing.recommended') }}</span>
+                    @endif
+
+                    <h2 class="billing-plan">{{ $plan['name'] }}</h2>
+                    <p class="billing-price">
+                        {{ number_format(((int) $plan['amount']) / 100, 2) }} {{ config('cashier.currency', 'EUR') }}
+                    </p>
+                    <p class="billing-desc">{{ $plan['description'] }}</p>
+                    <p class="billing-meta">
+                        {{ $plan['interval'] === 'year' ? __('admin.billing.interval_yearly') : __('admin.billing.interval_monthly') }}
+                    </p>
+                    <ul class="billing-list">
+                        <li>{{ trans_choice('admin.billing.site_slots', $plan['site_limit'], ['count' => $plan['site_limit']]) }}</li>
+                        <li>{{ __('admin.billing.draft_unlimited') }}</li>
+                    </ul>
+
+                    @if ($isCurrentPlan)
+                        <span class="billing-btn billing-btn--secondary">{{ __('admin.billing.plan_active_label') }}</span>
+                    @elseif ($activeSubscription)
+                        <form method="POST" action="{{ route('dashboard.billing.change-plan', ['plan' => $planKey]) }}" class="billing-form">
+                            @csrf
+                            <button type="submit" class="billing-btn billing-btn--primary">{{ __('admin.billing.change_plan_cta') }}</button>
+                        </form>
+                    @elseif ($setupReady)
+                        <a href="{{ route('dashboard.billing.checkout', ['plan' => $planKey]) }}" class="billing-btn billing-btn--primary">
+                            {{ __('admin.billing.activate_plan') }}
+                        </a>
+                    @endif
+                </article>
+            @endforeach
+        </section>
     </main>
 </body>
 </html>

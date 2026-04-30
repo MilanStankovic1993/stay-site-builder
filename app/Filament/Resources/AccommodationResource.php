@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Actions\PublishAccommodation;
 use App\Enums\AccommodationStatus;
 use App\Enums\AccommodationType;
 use App\Filament\Concerns\InteractsWithPanelContext;
@@ -29,9 +30,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Throwable;
 
 class AccommodationResource extends Resource
 {
@@ -268,9 +267,13 @@ class AccommodationResource extends Resource
                         ? __('admin.accommodations.publish_locked_tooltip')
                         : null)
                     ->action(function (Accommodation $record): void {
-                        $user = auth()->user();
+                        $result = app(PublishAccommodation::class)->handle(
+                            user: auth()->user(),
+                            accommodation: $record,
+                            enforceBillingRules: static::isOwnerPanel(),
+                        );
 
-                        if (static::isOwnerPanel() && ! ($user?->hasAvailablePublishingSlot($record) ?? false)) {
+                        if ($result === PublishAccommodation::RESULT_LOCKED) {
                             Notification::make()
                                 ->title(__('admin.accommodations.publish_locked_title'))
                                 ->body(__('admin.accommodations.publish_locked_body'))
@@ -280,31 +283,22 @@ class AccommodationResource extends Resource
                             return;
                         }
 
-                        if (static::isOwnerPanel() && $user?->requiresPublishingSetupFee()) {
-                            try {
-                                $user->chargePublishingSetupFee();
-                            } catch (Throwable $exception) {
-                                Log::warning('Unable to charge publishing setup fee.', [
-                                    'user_id' => $user->id,
-                                    'accommodation_id' => $record->id,
-                                    'message' => $exception->getMessage(),
-                                ]);
-
-                                Notification::make()
-                                    ->title(__('admin.accommodations.publish_charge_failed_title'))
-                                    ->body(__('admin.accommodations.publish_charge_failed_body'))
-                                    ->danger()
-                                    ->send();
-
-                                return;
-                            }
+                        if ($result === PublishAccommodation::RESULT_BILLING_FAILED) {
+                            Notification::make()
+                                ->title(__('admin.accommodations.publish_charge_failed_title'))
+                                ->body(__('admin.accommodations.publish_charge_failed_body'))
+                                ->danger()
+                                ->send();
                         }
-
-                        $record->update([
-                            'status' => AccommodationStatus::Published,
-                            'published_at' => now(),
-                        ]);
                     }),
+                Action::make('upgrade_plan')
+                    ->label(__('admin.accommodations.upgrade_plan'))
+                    ->icon(Heroicon::OutlinedRocketLaunch)
+                    ->color('warning')
+                    ->visible(fn (Accommodation $record): bool => static::isOwnerPanel()
+                        && $record->status !== AccommodationStatus::Published
+                        && (auth()->user()?->hasReachedPublishingLimit($record) ?? false))
+                    ->url(fn (): string => route('dashboard.billing')),
                 Action::make('unpublish')
                     ->label(fn (): string => static::isOwnerPanel() ? __('admin.accommodations.hide_site') : __('admin.accommodations.unpublish'))
                     ->icon(Heroicon::OutlinedArrowDownCircle)

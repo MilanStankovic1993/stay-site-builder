@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\SiteBillingCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,14 +19,16 @@ class OwnerBillingController extends Controller
     {
         $user = $this->resolveOwner($request);
         $activeSubscription = $user->publishingSubscription();
+        $billingCatalog = $this->billingCatalog();
 
         return view('billing.index', [
             'user' => $user,
-            'plans' => $this->plans(),
-            'recommendedPlan' => config('site-billing.recommended_plan', 'yearly'),
-            'setupReady' => $this->isBillingConfigured(),
-            'catalogReady' => $this->hasCatalogPrices(),
+            'plans' => $billingCatalog->all(),
+            'recommendedPlan' => $billingCatalog->recommendedPlanKey(),
+            'setupReady' => $billingCatalog->isConfigured(),
+            'catalogReady' => $billingCatalog->hasCatalogPrices(),
             'activeSubscription' => $activeSubscription,
+            'currentPlanKey' => $user->currentPublishingPlanKey(),
             'latestTransaction' => $user->publishingTransactions()->first(),
             'nextPayment' => $this->resolveNextPayment($activeSubscription),
             'checkoutState' => (string) $request->query('checkout', ''),
@@ -37,11 +40,12 @@ class OwnerBillingController extends Controller
     public function checkout(Request $request, string $plan): View|RedirectResponse
     {
         $user = $this->resolveOwner($request);
+        $billingCatalog = $this->billingCatalog();
 
-        $plans = $this->plans();
+        $plans = $billingCatalog->all();
         abort_unless(isset($plans[$plan]), 404);
 
-        if (! $this->isBillingConfigured()) {
+        if (! $billingCatalog->isConfigured()) {
             return redirect()->route('dashboard.billing')
                 ->with('billing_error', __('admin.billing.setup_missing'));
         }
@@ -67,12 +71,60 @@ class OwnerBillingController extends Controller
         ]);
     }
 
+    public function changePlan(Request $request, string $plan): RedirectResponse
+    {
+        $user = $this->resolveOwner($request);
+        $subscription = $user->publishingSubscription();
+        $billingCatalog = $this->billingCatalog();
+        $plans = $billingCatalog->all();
+
+        abort_unless(isset($plans[$plan]), 404);
+
+        if (! $subscription) {
+            return redirect()->route('dashboard.billing.checkout', ['plan' => $plan]);
+        }
+
+        if (! $billingCatalog->isConfigured()) {
+            return redirect()->route('dashboard.billing')
+                ->with('billing_error', __('admin.billing.plan_change_unavailable'));
+        }
+
+        if (! $billingCatalog->hasCatalogPrices()) {
+            return redirect()->route('dashboard.billing')
+                ->with('billing_error', __('admin.billing.plan_change_catalog_required'));
+        }
+
+        if ($user->currentPublishingPlanKey() === $plan) {
+            return redirect()->route('dashboard.billing')
+                ->with('billing_status', __('admin.billing.plan_already_active'));
+        }
+
+        try {
+            $subscription->swapAndInvoice([
+                (string) $plans[$plan]['price_id'] => (int) ($plans[$plan]['site_limit'] ?? 1),
+            ]);
+        } catch (Throwable $exception) {
+            Log::warning('Unable to change Paddle subscription plan.', [
+                'user_id' => $user->id,
+                'subscription_id' => $subscription->id,
+                'plan' => $plan,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return redirect()->route('dashboard.billing')
+                ->with('billing_error', __('admin.billing.plan_change_unavailable'));
+        }
+
+        return redirect()->route('dashboard.billing')
+            ->with('billing_status', __('admin.billing.plan_change_success'));
+    }
+
     public function updatePaymentMethod(Request $request): RedirectResponse
     {
         $user = $this->resolveOwner($request);
         $subscription = $user->publishingSubscription();
 
-        if (! $subscription || ! $this->isBillingConfigured()) {
+        if (! $subscription || ! $this->billingCatalog()->isConfigured()) {
             return redirect()->route('dashboard.billing')
                 ->with('billing_error', __('admin.billing.manage_unavailable'));
         }
@@ -96,7 +148,7 @@ class OwnerBillingController extends Controller
         $user = $this->resolveOwner($request);
         $subscription = $user->publishingSubscription();
 
-        if (! $subscription || ! $this->isBillingConfigured()) {
+        if (! $subscription || ! $this->billingCatalog()->isConfigured()) {
             return redirect()->route('dashboard.billing')
                 ->with('billing_error', __('admin.billing.cancel_unavailable'));
         }
@@ -123,7 +175,7 @@ class OwnerBillingController extends Controller
         $user = $this->resolveOwner($request);
         $subscription = $user->publishingSubscription();
 
-        if (! $subscription || ! $this->isBillingConfigured()) {
+        if (! $subscription || ! $this->billingCatalog()->isConfigured()) {
             return redirect()->route('dashboard.billing')
                 ->with('billing_error', __('admin.billing.resume_unavailable'));
         }
@@ -195,29 +247,14 @@ class OwnerBillingController extends Controller
             ]));
     }
 
-    protected function plans(): array
+    protected function billingCatalog(): SiteBillingCatalog
     {
-        return collect(config('site-billing.plans', []))
-            ->filter(fn (array $plan): bool => filled($plan['name'] ?? null) && filled($plan['amount'] ?? null))
-            ->all();
-    }
-
-    protected function isBillingConfigured(): bool
-    {
-        return filled(config('cashier.api_key'))
-            && (filled(config('cashier.client_side_token')) || filled(config('cashier.seller_id')));
-    }
-
-    protected function hasCatalogPrices(): bool
-    {
-        $plans = collect(config('site-billing.plans', []));
-
-        return $plans->isNotEmpty() && $plans->every(fn (array $plan): bool => filled($plan['price_id'] ?? null));
+        return app(SiteBillingCatalog::class);
     }
 
     protected function resolveNextPayment(?Subscription $subscription): ?Payment
     {
-        if (! $subscription || ! $this->isBillingConfigured() || $subscription->onGracePeriod()) {
+        if (! $subscription || ! $this->billingCatalog()->isConfigured() || $subscription->onGracePeriod()) {
             return null;
         }
 

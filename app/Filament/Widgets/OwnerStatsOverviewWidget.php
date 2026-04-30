@@ -41,6 +41,7 @@ class OwnerStatsOverviewWidget extends StatsOverviewWidget
             ->where('status', AccommodationStatus::Published)
             ->count();
         $canPublish = $user?->canPublishSites() ?? false;
+        $hasBillingPlan = $user?->currentPublishingPlan() !== null;
         $siteLimit = $user?->publishingSiteLimit() ?? 0;
 
         $inquiriesCount = AccommodationInquiry::query()
@@ -71,7 +72,9 @@ class OwnerStatsOverviewWidget extends StatsOverviewWidget
                         : (app()->getLocale() === 'en' ? 'Activate billing to unlock publishing.' : 'Aktivirajte naplatu da otkljucate objavu.')))
                 ->descriptionIcon(Heroicon::OutlinedGlobeAlt)
                 ->color($publishedCount ? Color::Emerald : Color::Amber)
-                ->url($latestAccommodation?->status === AccommodationStatus::Published ? $latestAccommodation->publicUrl() : AccommodationResource::getUrl(panel: 'dashboard'), shouldOpenInNewTab: $publishedCount > 0),
+                ->url($hasBillingPlan
+                    ? route('dashboard.billing')
+                    : ($latestAccommodation?->status === AccommodationStatus::Published ? $latestAccommodation->publicUrl() : AccommodationResource::getUrl(panel: 'dashboard')), shouldOpenInNewTab: ! $hasBillingPlan && $publishedCount > 0),
 
             Stat::make(app()->getLocale() === 'en' ? 'Received inquiries' : 'Primljeni upiti', $inquiriesCount)
                 ->description($inquiriesCount

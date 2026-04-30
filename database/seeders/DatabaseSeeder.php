@@ -26,7 +26,6 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Super Admin',
                 'password' => Hash::make('password'),
                 'is_active' => true,
-                'can_publish_sites' => true,
             ],
         );
         $admin->syncRoles([$superAdminRole]);
@@ -37,7 +36,8 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Demo Owner',
                 'password' => Hash::make('password'),
                 'is_active' => true,
-                'can_publish_sites' => true,
+                'manual_billing_plan_key' => 'pro_yearly',
+                'manual_billing_activated_at' => now(),
             ],
         );
         $owner->syncRoles([$ownerRole]);

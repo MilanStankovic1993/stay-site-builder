@@ -28,7 +28,7 @@ class AdminBillingOverviewWidget extends Widget
 
         $lockedOwners = $ownerQuery()
             ->where('is_active', true)
-            ->where('can_publish_sites', false)
+            ->whereNull('manual_billing_plan_key')
             ->whereDoesntHave('subscriptions', $publishingSubscription)
             ->count();
 
@@ -43,7 +43,7 @@ class AdminBillingOverviewWidget extends Widget
                 ],
                 [
                     'label' => __('admin.billing.admin_stats.manual'),
-                    'value' => $ownerQuery()->where('can_publish_sites', true)->count(),
+                    'value' => $ownerQuery()->whereNotNull('manual_billing_plan_key')->count(),
                     'tone' => 'warning',
                 ],
                 [
@@ -60,7 +60,7 @@ class AdminBillingOverviewWidget extends Widget
             'recentOwners' => $ownerQuery()
                 ->where(function ($query) use ($publishingSubscription): void {
                     $query
-                        ->where('can_publish_sites', true)
+                        ->whereNotNull('manual_billing_plan_key')
                         ->orWhereHas('subscriptions', $publishingSubscription);
                 })
                 ->with([

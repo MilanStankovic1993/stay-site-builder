@@ -80,4 +80,5 @@
         color: #1c1917;
         box-shadow: 0 18px 45px color-mix(in srgb, var(--site-secondary, var(--color-brand-gold)) 22%, transparent);
     }
+
 }

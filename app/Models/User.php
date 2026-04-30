@@ -23,12 +23,27 @@ class User extends Authenticatable implements FilamentUser
 
     public const PUBLISHING_SUBSCRIPTION_TYPE = 'publishing';
 
+    public const PUBLISHING_PLAN_SOURCE_ADMIN = 'admin';
+
+    public const PUBLISHING_PLAN_SOURCE_SUBSCRIPTION = 'subscription';
+
+    public const PUBLISHING_PLAN_SOURCE_MANUAL_PLAN = 'manual_plan';
+
+    public const PUBLISHING_PLAN_SOURCE_LOCKED = 'locked';
+
+    public const PUBLISHING_SETUP_FEE_NOT_REQUIRED = 'not_required';
+
+    public const PUBLISHING_SETUP_FEE_PENDING_FIRST_PUBLISH = 'pending_first_publish';
+
+    public const PUBLISHING_SETUP_FEE_CHARGED = 'charged';
+
+    public const PUBLISHING_SETUP_FEE_PENDING = 'pending';
+
     protected $fillable = [
         'name',
         'email',
         'password',
         'is_active',
-        'can_publish_sites',
         'manual_billing_plan_key',
         'manual_billing_activated_at',
     ];
@@ -43,7 +58,6 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'is_active' => 'boolean',
-            'can_publish_sites' => 'boolean',
             'manual_billing_activated_at' => 'datetime',
             'password' => 'hashed',
         ];
@@ -72,14 +86,8 @@ class User extends Authenticatable implements FilamentUser
     public function canPublishSites(): bool
     {
         return $this->isSuperAdmin()
-            || $this->hasManualPublishingAccess()
             || $this->hasManualBillingPlan()
             || $this->hasPublishingSubscription();
-    }
-
-    public function hasManualPublishingAccess(): bool
-    {
-        return (bool) $this->can_publish_sites;
     }
 
     public function hasPublishingSubscription(): bool
@@ -133,16 +141,12 @@ class User extends Authenticatable implements FilamentUser
             return (int) (($this->manualBillingPlan()['site_limit'] ?? 0));
         }
 
-        if ($this->hasManualPublishingAccess()) {
-            return 1;
-        }
-
         return 0;
     }
 
     public function hasAvailablePublishingSlot(?Accommodation $accommodation = null): bool
     {
-        if ($this->isSuperAdmin() || $this->hasManualPublishingAccess()) {
+        if ($this->isSuperAdmin()) {
             return true;
         }
 
@@ -159,7 +163,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function requiresPublishingSetupFee(): bool
     {
-        if ($this->isSuperAdmin() || $this->hasManualPublishingAccess()) {
+        if ($this->isSuperAdmin()) {
             return false;
         }
 
@@ -260,6 +264,11 @@ class User extends Authenticatable implements FilamentUser
         return null;
     }
 
+    public function currentPublishingPlanKey(): ?string
+    {
+        return $this->currentPublishingPlan()['key'] ?? null;
+    }
+
     public function currentPublishingPlanLabel(): string
     {
         $plan = $this->currentPublishingPlan();
@@ -267,63 +276,149 @@ class User extends Authenticatable implements FilamentUser
         return (string) ($plan['name'] ?? (app()->getLocale() === 'en' ? 'No plan' : 'Bez paketa'));
     }
 
-    public function publishingPlanSourceLabel(): string
+    public function publishingUsageLabel(): string
     {
         if ($this->isSuperAdmin()) {
-            return app()->getLocale() === 'en' ? 'Admin access' : 'Admin pristup';
+            return app()->getLocale() === 'en' ? 'Unlimited' : 'Neograniceno';
+        }
+
+        if (! $this->canPublishSites()) {
+            return '0 / 0';
+        }
+
+        return $this->publishedSitesCount().' / '.$this->publishingSiteLimit();
+    }
+
+    public function hasReachedPublishingLimit(?Accommodation $accommodation = null): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return false;
+        }
+
+        if ($accommodation && $accommodation->status === \App\Enums\AccommodationStatus::Published) {
+            return false;
+        }
+
+        return $this->canPublishSites() && ! $this->hasAvailablePublishingSlot($accommodation);
+    }
+
+    public function publishingPlanSourceLabel(): string
+    {
+        return match ($this->publishingPlanSourceKey()) {
+            self::PUBLISHING_PLAN_SOURCE_ADMIN => app()->getLocale() === 'en' ? 'Admin access' : 'Admin pristup',
+            self::PUBLISHING_PLAN_SOURCE_SUBSCRIPTION => app()->getLocale() === 'en' ? 'Paddle subscription' : 'Paddle pretplata',
+            self::PUBLISHING_PLAN_SOURCE_MANUAL_PLAN => app()->getLocale() === 'en' ? 'Manual package' : 'Rucni paket',
+            default => app()->getLocale() === 'en' ? 'Locked' : 'Zakljucano',
+        };
+    }
+
+    public function publishingPlanSourceKey(): string
+    {
+        if ($this->isSuperAdmin()) {
+            return self::PUBLISHING_PLAN_SOURCE_ADMIN;
         }
 
         if ($this->hasPublishingSubscription()) {
-            return app()->getLocale() === 'en' ? 'Paddle subscription' : 'Paddle pretplata';
+            return self::PUBLISHING_PLAN_SOURCE_SUBSCRIPTION;
         }
 
         if ($this->hasManualBillingPlan()) {
-            return app()->getLocale() === 'en' ? 'Manual package' : 'Rucni paket';
+            return self::PUBLISHING_PLAN_SOURCE_MANUAL_PLAN;
         }
 
-        if ($this->hasManualPublishingAccess()) {
-            return app()->getLocale() === 'en' ? 'Manual override' : 'Rucni override';
-        }
-
-        return app()->getLocale() === 'en' ? 'Locked' : 'Zakljucano';
+        return self::PUBLISHING_PLAN_SOURCE_LOCKED;
     }
 
     public function publishingAccessLabel(): string
     {
+        return match ($this->publishingAccessKey()) {
+            self::PUBLISHING_PLAN_SOURCE_ADMIN => app()->getLocale() === 'en' ? 'Admin access' : 'Admin pristup',
+            self::PUBLISHING_PLAN_SOURCE_MANUAL_PLAN => app()->getLocale() === 'en' ? 'Manual package' : 'Rucni paket',
+            self::PUBLISHING_PLAN_SOURCE_SUBSCRIPTION => app()->getLocale() === 'en' ? 'Paid subscription' : 'Placena pretplata',
+            default => app()->getLocale() === 'en' ? 'Locked' : 'Zakljucano',
+        };
+    }
+
+    public function publishingAccessKey(): string
+    {
         if ($this->isSuperAdmin()) {
-            return app()->getLocale() === 'en' ? 'Admin access' : 'Admin pristup';
+            return self::PUBLISHING_PLAN_SOURCE_ADMIN;
         }
 
         if ($this->hasManualBillingPlan()) {
-            return app()->getLocale() === 'en' ? 'Manual package' : 'Rucni paket';
+            return self::PUBLISHING_PLAN_SOURCE_MANUAL_PLAN;
         }
 
         if ($this->hasPublishingSubscription()) {
-            return app()->getLocale() === 'en' ? 'Paid subscription' : 'Placena pretplata';
+            return self::PUBLISHING_PLAN_SOURCE_SUBSCRIPTION;
         }
 
-        if ($this->hasManualPublishingAccess()) {
-            return app()->getLocale() === 'en' ? 'Manual override' : 'Rucni override';
-        }
-
-        return app()->getLocale() === 'en' ? 'Locked' : 'Zakljucano';
+        return self::PUBLISHING_PLAN_SOURCE_LOCKED;
     }
 
     public function publishingAccessColor(): string
     {
-        if ($this->isSuperAdmin() || $this->hasPublishingSubscription()) {
-            return 'success';
+        return match ($this->publishingAccessKey()) {
+            self::PUBLISHING_PLAN_SOURCE_ADMIN,
+            self::PUBLISHING_PLAN_SOURCE_SUBSCRIPTION => 'success',
+            self::PUBLISHING_PLAN_SOURCE_MANUAL_PLAN => 'info',
+            default => 'gray',
+        };
+    }
+
+    public function latestPublishingTransaction(): ?Transaction
+    {
+        return $this->publishingTransactions()->first();
+    }
+
+    public function latestPublishingTransactionLabel(): string
+    {
+        $transaction = $this->latestPublishingTransaction();
+
+        if (! $transaction) {
+            return app()->getLocale() === 'en' ? 'No payments yet' : 'Jos nema uplata';
         }
 
-        if ($this->hasManualBillingPlan()) {
-            return 'info';
+        $date = $transaction->billed_at?->format('d.m.Y H:i') ?? $transaction->created_at?->format('d.m.Y H:i');
+
+        return trim($transaction->total().' '.($date ? '- '.$date : ''));
+    }
+
+    public function publishingSetupFeeStatusLabel(): string
+    {
+        return match ($this->publishingSetupFeeStatusKey()) {
+            self::PUBLISHING_SETUP_FEE_NOT_REQUIRED => app()->getLocale() === 'en' ? 'Not required' : 'Nije potrebno',
+            self::PUBLISHING_SETUP_FEE_PENDING_FIRST_PUBLISH => app()->getLocale() === 'en' ? 'Pending first publish' : 'Ceka prvi publish',
+            self::PUBLISHING_SETUP_FEE_CHARGED => app()->getLocale() === 'en' ? 'Charged' : 'Naplaceno',
+            default => app()->getLocale() === 'en' ? 'Pending' : 'Na cekanju',
+        };
+    }
+
+    public function publishingSetupFeeStatusKey(): string
+    {
+        if ($this->isSuperAdmin() || $this->hasManualBillingPlan()) {
+            return self::PUBLISHING_SETUP_FEE_NOT_REQUIRED;
         }
 
-        if ($this->hasManualPublishingAccess()) {
-            return 'warning';
+        if (! ($this->hasPublishingSubscription() || $this->publishedSitesCount() > 0)) {
+            return self::PUBLISHING_SETUP_FEE_PENDING_FIRST_PUBLISH;
         }
 
-        return 'gray';
+        if ($this->publishingSetupFeeCharged()) {
+            return self::PUBLISHING_SETUP_FEE_CHARGED;
+        }
+
+        return self::PUBLISHING_SETUP_FEE_PENDING;
+    }
+
+    public function publishingSetupFeeStatusColor(): string
+    {
+        return match ($this->publishingSetupFeeStatusKey()) {
+            self::PUBLISHING_SETUP_FEE_CHARGED,
+            self::PUBLISHING_SETUP_FEE_NOT_REQUIRED => 'success',
+            self::PUBLISHING_SETUP_FEE_PENDING_FIRST_PUBLISH => 'warning',
+            default => 'gray',
+        };
     }
 
     public function isDemoAccount(): bool

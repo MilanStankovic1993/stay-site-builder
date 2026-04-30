@@ -60,6 +60,11 @@ php artisan serve
 - `APP_URL`
 - MySQL kredencijale
 - SMTP podatke
+- Paddle podatke:
+  `PADDLE_API_KEY`
+  `PADDLE_CLIENT_SIDE_TOKEN`
+  `PADDLE_WEBHOOK_SECRET`
+- sve `SITE_BILLING_*_PRICE_ID` vrednosti za aktivne pakete i setup fee
 
 2. Na serveru pokreni:
 
@@ -69,7 +74,6 @@ npm install
 npm run build
 php artisan key:generate
 php artisan migrate --force
-php artisan db:seed --force
 php artisan storage:link
 php artisan config:cache
 php artisan route:cache
@@ -77,17 +81,26 @@ php artisan view:cache
 php artisan optimize
 ```
 
+Ako je prvi deploy i potrebni su inicijalni demo/admin podaci, tek tada pokreni:
+
+```bash
+php artisan db:seed --force
+```
+
 3. Obavezno proveri:
 - da li je `public/storage` dostupan
 - da li je `queue` pokrenut ako koristis `QUEUE_CONNECTION=database`
 - da li mail radi
 - da li je HTTPS aktivan
-- da li se `APP_DEBUG=false`
+- da li je `APP_DEBUG=false`
+- da li Paddle webhook gadja ispravan endpoint i da li potpis prolazi
+- da li su svi billing paketi mapirani na ispravne Paddle `price_id` vrednosti
 
 4. Pre live pustanja proveri:
 - owner registraciju
 - aktivaciju korisnika od strane super admina
-- odobravanje objave sajta
+- dodelu rucnog paketa iz admin panela
+- owner billing checkout i povratak sa checkout-a
 - demo temu i jedan pravi public sajt
 - SR/EN prebacivanje na landing strani, panelima i storefront-u
 
@@ -98,6 +111,7 @@ php artisan optimize
 - koristi process manager za queue worker
 - dodaj error monitoring i uptime monitoring
 - ako ocekujes veci broj slika, planiraj prelazak na S3 / R2 storage
+- zakljucaj Paddle produkcioni nalog na `PADDLE_SANDBOX=false` pre live placanja
 
 ## Glavne rute
 

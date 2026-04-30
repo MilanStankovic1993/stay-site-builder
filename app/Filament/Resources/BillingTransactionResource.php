@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\InteractsWithPanelContext;
 use App\Filament\Resources\BillingTransactionResource\Pages;
 use App\Models\User;
+use App\Support\AdminBillingResourceSupport;
 use Filament\Actions\Action;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
@@ -66,17 +67,15 @@ class BillingTransactionResource extends Resource
                 TextColumn::make('invoice_number')
                     ->label(__('admin.billing_resources.invoice'))
                     ->searchable()
-                    ->placeholder('—'),
+                    ->placeholder('-'),
+                TextColumn::make('resolved_package')
+                    ->label(__('admin.billing_resources.package'))
+                    ->state(fn (Transaction $record): string => $record->billable?->currentPublishingPlanLabel() ?? '-')
+                    ->badge(),
                 TextColumn::make('status')
                     ->label(__('admin.billing_resources.status'))
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        Transaction::STATUS_PAID, Transaction::STATUS_COMPLETED, Transaction::STATUS_BILLED => 'success',
-                        Transaction::STATUS_READY, Transaction::STATUS_DRAFT => 'gray',
-                        Transaction::STATUS_PAST_DUE => 'warning',
-                        Transaction::STATUS_CANCELED => 'danger',
-                        default => 'gray',
-                    }),
+                    ->color(fn (string $state): string => AdminBillingResourceSupport::transactionStatusColor($state)),
                 TextColumn::make('total')
                     ->label(__('admin.billing_resources.total'))
                     ->state(fn (Transaction $record): string => $record->total()),
@@ -86,7 +85,7 @@ class BillingTransactionResource extends Resource
                 TextColumn::make('subscription.status')
                     ->label(__('admin.billing_resources.subscription_status'))
                     ->badge()
-                    ->placeholder('—'),
+                    ->placeholder('-'),
                 TextColumn::make('billed_at')
                     ->label(__('admin.billing_resources.billed_at'))
                     ->dateTime('d.m.Y H:i')
@@ -95,16 +94,10 @@ class BillingTransactionResource extends Resource
             ->filters([
                 SelectFilter::make('status')
                     ->label(__('admin.billing_resources.status'))
-                    ->options([
-                        Transaction::STATUS_COMPLETED => __('admin.billing_resources.transaction_completed'),
-                        Transaction::STATUS_PAID => __('admin.billing_resources.transaction_paid'),
-                        Transaction::STATUS_BILLED => __('admin.billing_resources.transaction_billed'),
-                        Transaction::STATUS_PAST_DUE => __('admin.billing_resources.status_past_due'),
-                        Transaction::STATUS_CANCELED => __('admin.billing_resources.status_canceled'),
-                    ]),
+                    ->options(AdminBillingResourceSupport::transactionStatusOptions()),
                 SelectFilter::make('billable_id')
                     ->label(__('admin.billing_resources.owner'))
-                    ->options(fn (): array => User::query()->role('owner')->orderBy('name')->pluck('name', 'id')->all())
+                    ->options(fn (): array => AdminBillingResourceSupport::ownerOptions())
                     ->searchable()
                     ->preload(),
                 SelectFilter::make('currency')
@@ -120,7 +113,7 @@ class BillingTransactionResource extends Resource
                 Action::make('open_user')
                     ->label(__('admin.billing_resources.open_user'))
                     ->icon(Heroicon::OutlinedUser)
-                    ->url(fn (Transaction $record): string => UserResource::getUrl('edit', ['record' => $record->billable_id], panel: 'admin')),
+                    ->url(fn (Transaction $record): string => AdminBillingResourceSupport::openUserUrl($record->billable_id)),
             ]);
     }
 

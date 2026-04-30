@@ -324,13 +324,18 @@
             </div>
 
             <div class="owner-builder-body">
-                @if (! $canPublish)
+                @if (! $canPublish || $hasReachedLimit)
                     <div class="owner-builder-alert">
-                        <p><strong>{{ __('admin.builder.publish_locked_title') }}</strong></p>
-                        <p>{{ __('admin.builder.publish_locked_text') }}</p>
+                        @if ($hasReachedLimit)
+                            <p><strong>{{ __('admin.builder.publish_limit_title') }}</strong></p>
+                            <p>{{ __('admin.builder.publish_limit_text') }}</p>
+                        @else
+                            <p><strong>{{ __('admin.builder.publish_locked_title') }}</strong></p>
+                            <p>{{ __('admin.builder.publish_locked_text') }}</p>
+                        @endif
                         <div class="owner-builder-actions" style="margin-top: 0.9rem;">
                             <a href="{{ $billingUrl }}" class="owner-builder-btn owner-builder-btn--primary">
-                                {{ __('admin.billing.activate_cta') }}
+                                {{ $billingCtaLabel }}
                             </a>
                         </div>
                     </div>
@@ -362,6 +367,13 @@
                         {{ __('admin.builder.plan_usage') }} {{ $publishedSitesCount }} / {{ $siteLimit }}
                     </p>
                 @endif
+                @if ($hasBillingPlan)
+                    <div class="owner-builder-actions" style="margin-top: 0.8rem;">
+                        <a href="{{ $billingUrl }}" class="owner-builder-btn owner-builder-btn--secondary">
+                            {{ __('admin.billing.upgrade_cta') }}
+                        </a>
+                    </div>
+                @endif
                 @if ($accommodation)
                     <div class="owner-builder-actions" style="margin-top: 0.8rem; align-items: center;">
                         <h3 class="owner-builder-panel__title" style="margin: 0;">{{ $accommodation->display_title }}</h3>
@@ -369,15 +381,7 @@
                             <span class="owner-builder-badge">{{ __('admin.builder.demo_badge') }}</span>
                         @endif
                     </div>
-                    <p class="owner-builder-panel__text">
-                        {{
-                            $accommodation->status === \App\Enums\AccommodationStatus::Published
-                                ? __('admin.builder.published_text')
-                                : ($canPublish
-                                    ? __('admin.builder.draft_ready_text')
-                                    : __('admin.builder.draft_waiting_text'))
-                        }}
-                    </p>
+                    <p class="owner-builder-panel__text">{{ $accommodationStatusText }}</p>
 
                     <div class="owner-builder-actions">
                         <a href="{{ $accommodation->previewUrl() }}" target="_blank" class="owner-builder-btn {{ $canPublish ? 'owner-builder-btn--primary' : 'owner-builder-btn--secondary' }}">
@@ -386,9 +390,9 @@
                         <a href="{{ \App\Filament\Resources\AccommodationResource::getUrl('edit', ['record' => $accommodation], panel: 'dashboard') }}" class="owner-builder-btn owner-builder-btn--secondary">
                             {{ __('admin.builder.edit') }}
                         </a>
-                        @if (! $canPublish)
+                        @if (! $canPublish || $hasReachedLimit)
                             <a href="{{ $billingUrl }}" class="owner-builder-btn owner-builder-btn--primary">
-                                {{ __('admin.billing.activate_cta') }}
+                                {{ $billingCtaLabel }}
                             </a>
                         @endif
                         @if ($accommodation->status === \App\Enums\AccommodationStatus::Published)
@@ -414,6 +418,7 @@
                 <div class="owner-builder-links">
                     <a href="{{ $manageUrl }}" class="owner-builder-shortcut">{{ __('admin.builder.manage') }}</a>
                     <a href="{{ $inquiriesUrl }}" class="owner-builder-shortcut">{{ __('admin.builder.browse_inquiries') }}</a>
+                    <a href="{{ $billingUrl }}" class="owner-builder-shortcut">{{ __('admin.billing.open_billing') }}</a>
                 </div>
             </div>
 

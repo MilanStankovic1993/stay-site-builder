@@ -26,6 +26,7 @@ Route::view('/', 'home')->name('home');
 Route::middleware('auth')->prefix('dashboard/billing')->group(function (): void {
     Route::get('/', [OwnerBillingController::class, 'index'])->name('dashboard.billing');
     Route::post('update-payment-method', [OwnerBillingController::class, 'updatePaymentMethod'])->name('dashboard.billing.update-payment-method');
+    Route::post('change-plan/{plan}', [OwnerBillingController::class, 'changePlan'])->name('dashboard.billing.change-plan');
     Route::post('cancel', [OwnerBillingController::class, 'cancel'])->name('dashboard.billing.cancel');
     Route::post('resume', [OwnerBillingController::class, 'resume'])->name('dashboard.billing.resume');
     Route::get('{plan}', [OwnerBillingController::class, 'checkout'])->name('dashboard.billing.checkout');
