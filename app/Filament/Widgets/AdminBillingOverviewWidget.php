@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Filament\Resources\UserResource;
 use App\Models\User;
+use App\Support\SiteBillingCatalog;
 use Filament\Widgets\Widget;
 use Laravel\Paddle\Subscription;
 
@@ -33,8 +34,7 @@ class AdminBillingOverviewWidget extends Widget
             ->count();
 
         return [
-            'setupReady' => filled(config('cashier.api_key'))
-                && (filled(config('cashier.client_side_token')) || filled(config('cashier.seller_id'))),
+            'setupReady' => app(SiteBillingCatalog::class)->isConfigured(),
             'stats' => [
                 [
                     'label' => __('admin.billing.admin_stats.paid'),

@@ -295,7 +295,7 @@ return [
         'publish_enabled_title' => 'Objava sajta je otkljucana',
         'publish_enabled_text' => 'Mozete odmah da objavite novi ili postojeci sajt iz owner panela.',
         'processing_success' => 'Placanje je poslato na obradu. Ako webhook stigne sa malim zadrzavanjem, pristup objavi ce se automatski pojaviti kroz nekoliko trenutaka.',
-        'setup_missing' => 'Paddle jos nije kompletno konfigurisan u okruzenju. Potrebni su API key i client-side token pre nego sto checkout moze da radi.',
+        'setup_missing' => 'Paddle jos nije kompletno konfigurisan u okruzenju. Potrebni su API key, client-side token i webhook secret pre nego sto checkout moze bezbedno da radi.',
         'catalog_fallback_note' => 'Paketi trenutno mogu da rade preko internog fallback checkout modela, ali za produkciju treba uneti Paddle price ID vrednosti za svaki paket i setup fee.',
         'checkout_unavailable' => 'Checkout trenutno nije mogao da se pripremi. Pokusajte ponovo za nekoliko trenutaka.',
         'plan_change_unavailable' => 'Promena paketa trenutno nije dostupna. Pokusajte ponovo za nekoliko trenutaka.',

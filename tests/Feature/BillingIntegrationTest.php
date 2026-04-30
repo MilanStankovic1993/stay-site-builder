@@ -188,6 +188,7 @@ class BillingIntegrationTest extends TestCase
         config()->set('cashier.api_key', null);
         config()->set('cashier.client_side_token', null);
         config()->set('cashier.seller_id', null);
+        config()->set('cashier.webhook_secret', null);
 
         $this->actingAs($owner)
             ->post(route('dashboard.billing.cancel'))

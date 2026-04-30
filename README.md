@@ -81,6 +81,12 @@ php artisan view:cache
 php artisan optimize
 ```
 
+Pre smoke testa billing-a pokreni:
+
+```bash
+php artisan billing:check
+```
+
 Ako je prvi deploy i potrebni su inicijalni demo/admin podaci, tek tada pokreni:
 
 ```bash
@@ -93,7 +99,7 @@ php artisan db:seed --force
 - da li mail radi
 - da li je HTTPS aktivan
 - da li je `APP_DEBUG=false`
-- da li Paddle webhook gadja ispravan endpoint i da li potpis prolazi
+- da li Paddle webhook gadja `POST /paddle/webhook` na ispravnom domenu i da li `PADDLE_WEBHOOK_SECRET` potpis prolazi
 - da li su svi billing paketi mapirani na ispravne Paddle `price_id` vrednosti
 
 4. Pre live pustanja proveri:

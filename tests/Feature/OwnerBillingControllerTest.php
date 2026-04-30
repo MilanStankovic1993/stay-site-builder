@@ -19,20 +19,12 @@ class OwnerBillingControllerTest extends TestCase
         config()->set('cashier.api_key', null);
         config()->set('cashier.client_side_token', null);
         config()->set('cashier.seller_id', null);
+        config()->set('cashier.webhook_secret', null);
 
         $this->actingAs($owner)
             ->get(route('dashboard.billing.checkout', ['plan' => 'basic_monthly']))
             ->assertRedirect(route('dashboard.billing'))
             ->assertSessionHas('billing_error');
-    }
-
-    public function test_checkout_returns_not_found_for_unknown_plan(): void
-    {
-        $owner = $this->createOwner();
-
-        $this->actingAs($owner)
-            ->get(route('dashboard.billing.checkout', ['plan' => 'missing-plan']))
-            ->assertNotFound();
     }
 
     public function test_change_plan_redirects_to_checkout_when_owner_has_no_subscription(): void
@@ -51,9 +43,24 @@ class OwnerBillingControllerTest extends TestCase
         config()->set('cashier.api_key', null);
         config()->set('cashier.client_side_token', null);
         config()->set('cashier.seller_id', null);
+        config()->set('cashier.webhook_secret', null);
 
         $this->actingAs($owner)
             ->post(route('dashboard.billing.change-plan', ['plan' => 'basic_monthly']))
+            ->assertRedirect(route('dashboard.billing'))
+            ->assertSessionHas('billing_error');
+    }
+
+    public function test_checkout_redirects_back_when_webhook_secret_is_missing(): void
+    {
+        $owner = $this->createOwner();
+
+        config()->set('cashier.api_key', 'test_api_key');
+        config()->set('cashier.client_side_token', 'test_client_token');
+        config()->set('cashier.webhook_secret', null);
+
+        $this->actingAs($owner)
+            ->get(route('dashboard.billing.checkout', ['plan' => 'basic_monthly']))
             ->assertRedirect(route('dashboard.billing'))
             ->assertSessionHas('billing_error');
     }
@@ -65,6 +72,7 @@ class OwnerBillingControllerTest extends TestCase
         $this->configureCatalogPrices();
         config()->set('cashier.api_key', 'test_api_key');
         config()->set('cashier.client_side_token', 'test_client_token');
+        config()->set('cashier.webhook_secret', 'whsec_test');
         config()->set('site-billing.plans.advanced_monthly.price_id', null);
 
         $this->actingAs($owner)

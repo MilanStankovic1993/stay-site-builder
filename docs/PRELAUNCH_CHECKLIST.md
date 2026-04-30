@@ -10,6 +10,7 @@
 - Podesen mail server
 - HTTPS aktivan
 - Popunjeni Paddle kljucevi i webhook secret
+- Paddle webhook povezan na `POST /paddle/webhook` na tacnom domenu
 - Popunjeni svi `SITE_BILLING_*_PRICE_ID` kljucevi
 
 ## 2. Deploy komande
@@ -26,6 +27,12 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan optimize
+```
+
+Pre billing smoke testa pokrenuti:
+
+```bash
+php artisan billing:check
 ```
 
 Ako je prvi deploy i trebaju demo/admin podaci:
@@ -93,7 +100,7 @@ php artisan db:seed --force
 - queue worker je podignut ako se koristi `QUEUE_CONNECTION=database`
 - error logging je provereno
 - monitoring / uptime alat je dodat ako postoji
-- Paddle webhook je vezan za produkcioni domen i eventovi prolaze
+- Paddle webhook je vezan za produkcioni domen na `POST /paddle/webhook` i eventovi prolaze
 
 ## 9. Posle launch-a
 

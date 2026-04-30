@@ -33,7 +33,8 @@ class SiteBillingCatalog
     public function isConfigured(): bool
     {
         return filled(config('cashier.api_key'))
-            && (filled(config('cashier.client_side_token')) || filled(config('cashier.seller_id')));
+            && (filled(config('cashier.client_side_token')) || filled(config('cashier.seller_id')))
+            && filled(config('cashier.webhook_secret'));
     }
 
     public function hasCatalogPrices(): bool

@@ -295,7 +295,7 @@ return [
         'publish_enabled_title' => 'Website publishing is unlocked',
         'publish_enabled_text' => 'You can publish a new or existing website immediately from the owner panel.',
         'processing_success' => 'Your payment was sent for processing. If the webhook arrives with a slight delay, publish access will appear automatically within a few moments.',
-        'setup_missing' => 'Paddle is not fully configured in this environment yet. The API key and client-side token are required before checkout can work.',
+        'setup_missing' => 'Paddle is not fully configured in this environment yet. The API key, client-side token, and webhook secret are required before checkout can run safely.',
         'catalog_fallback_note' => 'Packages can currently run via the internal fallback checkout model, but production should use Paddle price IDs for every package and the setup fee.',
         'checkout_unavailable' => 'Checkout could not be prepared right now. Please try again in a few moments.',
         'plan_change_unavailable' => 'The package change is currently unavailable. Please try again in a few moments.',
